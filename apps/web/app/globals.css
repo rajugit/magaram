@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import './workspace.css';
+
+:root {
+  --magaram-orange: #ff9e32;
+  --magaram-coral: #d95367;
+  --magaram-burgundy: #9c3b50;
+  --magaram-ink: #44212b;
+  --magaram-muted: #73535b;
+  --magaram-cream: #faf8f5;
+  --magaram-border: #efd6ce;
+  --magaram-red: var(--magaram-burgundy);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--magaram-cream);
+  color: var(--magaram-ink);
+  font-family: Arial, 'Tamil Sangam MN', sans-serif;
+  font-size: 14px;
+}

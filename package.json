@@ -1,0 +1,31 @@
+{
+  "name": "magaram-media",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "preview:export": "node scripts/export-previews.mjs",
+    "setup:local": "node scripts/setup-local.mjs",
+    "infra:up": "node --env-file=.env scripts/start-infra.mjs",
+    "db:deploy": "pnpm --filter @magaram/api db:deploy",
+    "build": "pnpm -r --if-present build",
+    "dev": "pnpm --parallel --filter @magaram/web --filter @magaram/api --filter @magaram/worker dev",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "db:validate": "pnpm --filter @magaram/api db:validate",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.46.3"
+  }
+}

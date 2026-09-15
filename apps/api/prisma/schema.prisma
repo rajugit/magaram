@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+  DISABLED
+}
+
+enum AppRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  REPORTER
+  FACT_CHECKER
+  SOCIAL_MANAGER
+  SALES_MANAGER
+  ADVERTISER
+  BUSINESS_OWNER
+  RECRUITER
+  FINANCE
+  ANALYST
+  CONTRIBUTOR
+}
+
+model User {
+  id              String      @id @default(cuid())
+  email           String      @unique @db.VarChar(320)
+  displayName     String      @db.VarChar(160)
+  passwordHash    String      @db.VarChar(255)
+  status          UserStatus  @default(ACTIVE)
+  failedLoginAttempts Int     @default(0)
+  lockedUntil     DateTime?
+  lastLoginAt     DateTime?
+  passwordChangedAt DateTime  @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+  roles           UserRole[]
+  sessions        Session[]
+  passwordResets  PasswordReset[]
+  auditEvents     AuditLog[]  @relation("AuditActor")
+  articles        Article[]
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  code        AppRole          @unique
+  name        String           @db.VarChar(100)
+  description String?          @db.VarChar(500)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique @db.VarChar(100)
+  description String?          @db.VarChar(500)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  lastUsedAt DateTime @default(now())
+  revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String   @db.VarChar(120)
+  entityType String   @db.VarChar(100)
+  entityId   String?  @db.VarChar(191)
+  requestId  String?  @db.VarChar(100)
+  ipHash     String?  @db.Char(64)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique @db.VarChar(160)
+  value       Json
+  description String?  @db.VarChar(500)
+  isSecret    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum EditorialStatus {
+  DRAFT
+  AI_DRAFT
+  EDITOR_REVIEW
+  FACT_CHECK
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  UPDATED
+  ARCHIVED
+}
+
+model Article {
+  id String @id @default(cuid())
+  slug String @unique @db.VarChar(191)
+  title String @db.VarChar(250)
+  summary String @db.Text
+  body String @db.LongText
+  type String @default("NEWS") @db.VarChar(32)
+  status EditorialStatus @default(DRAFT)
+  sensitive Boolean @default(false)
+  sponsored Boolean @default(false)
+  isDemo Boolean @default(false)
+  authorId String
+  author User @relation(fields: [authorId], references: [id])
+  category String @db.VarChar(100)
+  location String @db.VarChar(100)
+  tags Json
+  imageId String?
+  image MediaAsset? @relation(fields: [imageId], references: [id])
+  seoTitle String? @db.VarChar(250)
+  seoDescription String? @db.VarChar(320)
+  version Int @default(1)
+  approvedBy String? @db.VarChar(191)
+  approvedAt DateTime?
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sources ArticleSource[]
+  claims ArticleClaim[]
+  revisions ArticleRevision[]
+  corrections Correction[]
+
+  @@index([status, publishedAt])
+  @@index([category, status])
+  @@index([location, status])
+  @@index([authorId])
+  @@index([status, scheduledAt])
+}
+
+model ArticleSource {
+  id String @id @default(cuid())
+  articleId String
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  label String @db.VarChar(250)
+  url String @db.VarChar(1000)
+  verified Boolean @default(false)
+  @@index([articleId])
+}
+
+model ArticleClaim {
+  id String @id @default(cuid())
+  articleId String
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  text String @db.Text
+  status String @default("UNVERIFIED") @db.VarChar(32)
+  evidence String @db.Text
+  checkedBy String? @db.VarChar(191)
+  @@index([articleId])
+}
+
+model ArticleRevision {
+  id String @id @default(cuid())
+  articleId String
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  actorId String @db.VarChar(191)
+  version Int
+  snapshot Json
+  createdAt DateTime @default(now())
+  @@unique([articleId, version])
+}
+
+model Correction {
+  id String @id @default(cuid())
+  articleId String
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  actorId String @db.VarChar(191)
+  reason String @db.Text
+  createdAt DateTime @default(now())
+  @@index([articleId, createdAt])
+}
+
+model Taxonomy {
+  id String @id @default(cuid())
+  kind String @db.VarChar(30)
+  slug String @db.VarChar(100)
+  name String @db.VarChar(160)
+  createdAt DateTime @default(now())
+  @@unique([kind, slug])
+}
+
+model MediaAsset {
+  id String @id @default(cuid())
+  filename String @db.VarChar(191)
+  mime String @db.VarChar(100)
+  size Int
+  alt String @db.VarChar(300)
+  credit String @db.VarChar(300)
+  ownerId String @db.VarChar(191)
+  createdAt DateTime @default(now())
+  articles Article[]
+}
