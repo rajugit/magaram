@@ -21,10 +21,12 @@ Each phase requires working persisted workflows, authorization checks, validatio
 | 10 Audience             | Pending     | Membership, newsletter, subscription lifecycle                      |
 | 11 Media business       | Pending     | Creators, services, events, intelligence, licensing                 |
 | 12 Revenue intelligence | Pending     | Reconciled ledger and real metrics                                  |
-| 13 AWS                  | Pending     | Requires AWS account, domain and deployment authority               |
+| 13 AWS                  | Blocked     | Dedicated AWS login missing; domain mapping deferred                |
 | 14 CI/CD                | Pending     | Repository remote, checks, release and rollback                     |
 | 15 Production readiness | Pending     | Integrated testing and provider verification                        |
 
 ## Current constraints
 
-The Git remote is `https://github.com/rajugit/magaram.git` (public), with local branch `main`. Production credentials have not been configured for this project. Local database and preview-server startup requests were declined. Offline design previews are available in `docs/previews/`; these contain labelled sample data and inactive forms. Actual email, AI, payment, social delivery and AWS deployment cannot be claimed operational until configured and tested.
+The Git remote is `https://github.com/rajugit/magaram.git` (public), with local branch `main`. Local MySQL/Redis are running, both migrations were applied, and roles plus a local preview administrator were seeded. The API readiness check passes and the interactive preview at `http://localhost:3001/preview/2` returns HTTP 200. All 11 current API tests pass; full database-backed CMS workflow acceptance remains outstanding. Offline design previews remain available in `docs/previews/` with labelled sample data and inactive forms.
+
+The proposed cost-optimized AWS starting target is $35/month before tax, using a single 4 GB Lightsail server plus backups and limited ancillary storage. This is an estimate, not a spending cap or an implemented deployment. Dedicated `magaram` AWS authentication is missing; the unrelated existing AWS profile must not be used. Domain mapping is deferred. Actual email, AI, payment, social delivery and AWS deployment cannot be claimed operational until configured and tested.
