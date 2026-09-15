@@ -16,4 +16,4 @@ Magaram Media is a Tamil-first digital journalism, local commerce, and revenue p
 4. Validate the schema with `pnpm db:validate`.
 5. Run `pnpm dev`.
 
-The API is intentionally limited to Phase 1 foundation endpoints. Editorial, AI, public publishing, social, payment, and marketplace features require later phase approval.
+The foundation and initial editorial API/UI are implemented; the full product is still in progress. See `docs/DELIVERY_TRACKER.md` for remaining acceptance work and `docs/DEPLOYMENT.md` for the low-cost AWS preview setup. A deployed preview does not mean later product phases are complete.

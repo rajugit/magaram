@@ -21,7 +21,7 @@ Each phase requires working persisted workflows, authorization checks, validatio
 | 10 Audience             | Pending     | Membership, newsletter, subscription lifecycle                      |
 | 11 Media business       | Pending     | Creators, services, events, intelligence, licensing                 |
 | 12 Revenue intelligence | Pending     | Reconciled ledger and real metrics                                  |
-| 13 AWS                  | Blocked     | Dedicated AWS login missing; domain mapping deferred                |
+| 13 AWS                  | Preview live | Single-server HTTPS preview; production hardening still pending    |
 | 14 CI/CD                | Pending     | Repository remote, checks, release and rollback                     |
 | 15 Production readiness | Pending     | Integrated testing and provider verification                        |
 
@@ -29,4 +29,4 @@ Each phase requires working persisted workflows, authorization checks, validatio
 
 The Git remote is `https://github.com/rajugit/magaram.git` (public), with local branch `main`. Local MySQL/Redis are running, both migrations were applied, and roles plus a local preview administrator were seeded. The API readiness check passes and the interactive preview at `http://localhost:3001/preview/2` returns HTTP 200. All 11 current API tests pass; full database-backed CMS workflow acceptance remains outstanding. Offline design previews remain available in `docs/previews/` with labelled sample data and inactive forms.
 
-The proposed cost-optimized AWS starting target is $35/month before tax, using a single 4 GB Lightsail server plus backups and limited ancillary storage. This is an estimate, not a spending cap or an implemented deployment. Dedicated `magaram` AWS authentication is missing; the unrelated existing AWS profile must not be used. Domain mapping is deferred. Actual email, AI, payment, social delivery and AWS deployment cannot be claimed operational until configured and tested.
+The low-cost AWS preview runs on a 4 GB Lightsail server in Mumbai at `https://65.2.18.204/preview/2`. Trusted TLS, API readiness, persisted administrator authentication, unauthorized-access rejection and logout passed deployment checks. A logical database backup was generated, daily backup/snapshot schedules are enabled, and certificate renewal passed a dry run. The $35/month budget has 80% and 100% warning thresholds; it is not a spending cap. Domain mapping is deferred. The unrelated existing AWS profile remains untouched. Actual email, AI, payment and social delivery cannot be claimed operational until configured and tested. This preview deployment does not complete the full product or production-readiness phase.

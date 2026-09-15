@@ -2,6 +2,8 @@
 
 This deploys the current foundation and partial CMS, not a production-complete platform.
 
+Preview: <https://65.2.18.204/preview/2>. Live login: <https://65.2.18.204/login>. First verified deployment: 2026-09-16 (Asia/Kolkata).
+
 ## Infrastructure
 
 - Dedicated AWS profile `magaram`, Mumbai `ap-south-1`.
@@ -26,10 +28,25 @@ Run `sudo bash deploy/release.sh <full-commit-sha>` from the release directory. 
 - A failed app rollout can be rolled back using the previous image tag and compose configuration. Database migrations need separate compatibility review; never blindly roll back the database or remove its volume.
 - Keep the previous release/image until the next release is verified. Review disk usage and snapshot storage regularly.
 - Budget target approximately $35/month before taxes, not a hard cap. No load balancer, RDS, managed Redis, paid CDN or custom domain is provisioned by this deployment.
+- Budget `magaram-lightsail-mumbai` monitors Mumbai Lightsail costs against $35/month, with 80% and 100% email alerts to `magaram.in@gmail.com`. It does not monitor unrelated AWS services or prevent spending.
 - Single-server failure can cause downtime. Provider integrations, full CMS acceptance, backup restoration rehearsal and load testing remain outstanding.
 
 ## Verification
 
 Check `/health`, `/ready`, `/preview/2` and `/login` over trusted HTTPS. Confirm unauthenticated API access is denied, secure-cookie login works, the certificate renewal dry run passes, and backup files exist. Never copy a credential or session cookie into the deployment report.
 
+The initial cloud smoke test passed readiness, preview rendering, unauthorized-access rejection, persisted administrator login, secure/HttpOnly cookies, authorized article-list access and logout. The first logical backup was generated and the TLS renewal dry run passed. `deploy/smoke.mjs` repeats the secret-safe server checks. Full restore rehearsal and editorial end-to-end acceptance remain outstanding.
+
+The dependency scan identified GHSA-ggr8-5vv4-36mx in Prisma's transitive `deepmerge-ts` dependency. The workspace pins the patched 8.0.0 version; Prisma generation, all 11 current tests, type checks and the production dependency audit pass with this override.
+
 References: [Lightsail pricing](https://aws.amazon.com/lightsail/pricing/) and [IP certificate support](https://letsencrypt.org/2026/03/11/shorter-certs-certbot).
+
+## Owner-only administrator access
+
+Administrator email: `magaram.in@gmail.com`. To retrieve the generated password, run the following yourself in your own Terminal from the repository, with the `magaram` AWS profile configured. Do not ask an assistant to run this password-display command or paste its output into chat:
+
+```sh
+node deploy/remote.mjs run "sudo sed -n 's/^SUPER_ADMIN_PASSWORD=//p' /etc/magaram/bootstrap.env"
+```
+
+SSH is restricted to the original deployment operator's public IP. If your internet address changes, update only the server's SSH source rule before using the helper; do not open SSH globally. The helper pins server host keys from AWS and removes its temporary SSH key files when it exits normally.

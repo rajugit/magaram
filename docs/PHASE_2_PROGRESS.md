@@ -12,7 +12,7 @@
 ## Remaining acceptance work
 
 - Database-backed editorial persistence and full browser workflow integration tests remain outstanding; successful migrations and readiness checks do not establish complete workflow coverage.
-- AWS deployment is blocked by missing dedicated `magaram` AWS authentication. No cloud deployment has occurred; domain mapping is explicitly deferred.
+- AWS HTTPS preview is deployed at `https://65.2.18.204/preview/2`. Readiness, authentication and authorization smoke checks pass; production readiness remains incomplete and domain mapping is explicitly deferred.
 - The worker still needs real session cleanup and scheduled publication handling. Its earlier acknowledgement stub is not a completed queue workflow.
 - CMS verification, scheduling, revision and correction APIs need complete editor controls and integration tests.
 - Real taxonomy/author selection and multiple-source editing need to replace the limited initial editor inputs.

@@ -1,10 +1,10 @@
 # AWS and Deployment Assessment
 
-## Current assessment
+## Original audit assessment
 
-No AWS configuration, infrastructure-as-code, Dockerfiles, container manifests, Nginx configuration, PM2 configuration, CI/CD workflow, environment inventory, health checks, backup policy, or monitoring setup is present.
+The initial empty-workspace audit found no deployment configuration. That historical assessment has been superseded by the low-cost preview implementation in `deploy/`; see `docs/DEPLOYMENT.md` for current infrastructure, TLS, backup and release controls. Full production readiness and CI/CD remain outstanding.
 
-## Proposed staged infrastructure
+## Original scale-up proposal (deferred)
 
 | Stage              | Scope                                                                                                                 |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------- |

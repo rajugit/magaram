@@ -37,9 +37,9 @@ node scripts/aws-preflight.mjs
 
 ## Deployment access
 
-The deployed application should use an EC2 instance profile or ECS task role; CI should use GitHub OIDC with a deployment role scoped to the chosen repository/branch. Do not embed IAM access keys in application `.env` files or GitHub secrets. Database and provider secrets should be injected from AWS Secrets Manager or SSM at runtime.
+The low-cost Lightsail preview has no AWS credentials inside its application containers. Fresh database/session secrets live in root-only server configuration. Future AWS-integrated compute should use an instance/task role; CI should use GitHub OIDC with a deployment role scoped to the chosen repository/branch. Do not embed IAM access keys in application `.env` files or GitHub secrets. A later managed-service deployment should inject provider secrets through Secrets Manager or SSM.
 
-Before provisioning billable infrastructure, resolve the exact repository, domain/DNS ownership, environment, service selections, and resource budget. AWS CLI is installed locally; no Magaram cloud resources have been created by this task.
+The dedicated AWS login is verified. The user authorized the low-cost preview deployment; Lightsail `magaram-preview` and its attached static IP have been created in Mumbai. The target budget is approximately $35/month before tax, not a hard spending cap. Domain mapping is deferred. See `docs/DEPLOYMENT.md` for release and access details.
 
 ## References
 
