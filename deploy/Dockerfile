@@ -11,6 +11,7 @@ COPY . .
 RUN pnpm --filter @magaram/api db:generate
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
+RUN chown -R node:node /app/apps/web/.next
 ENV NODE_ENV=production
 USER node
 CMD ["pnpm", "--filter", "@magaram/web", "start", "--hostname", "127.0.0.1"]
