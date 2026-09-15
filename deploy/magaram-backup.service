@@ -1,0 +1,6 @@
+[Unit]
+Description=Magaram logical MySQL backup
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/magaram-backup

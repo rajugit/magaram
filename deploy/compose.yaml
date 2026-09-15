@@ -1,0 +1,54 @@
+name: magaram
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    env_file: /etc/magaram/mysql.env
+    ports: ["127.0.0.1:33316:3306"]
+    volumes: ["mysql:/var/lib/mysql"]
+    command: ["--innodb-buffer-pool-size=268435456", "--max-connections=60"]
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    logging: &logs
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["127.0.0.1:36379:6379"]
+    volumes: ["redis:/data"]
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    mem_limit: 192m
+    logging: *logs
+  api:
+    image: magaram:${RELEASE_TAG:?set RELEASE_TAG}
+    restart: unless-stopped
+    network_mode: host
+    env_file: /etc/magaram/runtime.env
+    working_dir: /app/apps/api
+    command: ["node", "dist/main.js"]
+    volumes: ["/var/lib/magaram/uploads:/app/apps/api/uploads"]
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis: {condition: service_started}
+    mem_limit: 512m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logs
+  web:
+    image: magaram:${RELEASE_TAG:?set RELEASE_TAG}
+    restart: unless-stopped
+    network_mode: host
+    env_file: /etc/magaram/runtime.env
+    working_dir: /app/apps/web
+    command: ["node", "node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1"]
+    depends_on: [api]
+    mem_limit: 768m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logs
+volumes:
+  mysql:
+  redis:

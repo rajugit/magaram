@@ -15,3 +15,4 @@ uploads/
 *.key
 credentials
 docs/previews/
+.deploy/

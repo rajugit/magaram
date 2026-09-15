@@ -1,0 +1,7 @@
+[Unit]
+Description=Daily Magaram database backup before snapshot window
+[Timer]
+OnCalendar=*-*-* 19:00:00 UTC
+Persistent=true
+[Install]
+WantedBy=timers.target
