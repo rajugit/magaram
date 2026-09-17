@@ -93,6 +93,23 @@ class MemoryIdentityRepository implements IdentityRepository {
   async record(event: AuditEvent): Promise<void> {
     this.events.push(event);
   }
+  async changePassword(input: {
+    userId: string;
+    previousHash: string;
+    passwordHash: string;
+  }): Promise<boolean> {
+    if (this.user.id !== input.userId || this.user.passwordHash !== input.previousHash)
+      return false;
+    this.user.passwordHash = input.passwordHash;
+    this.sessions.clear();
+    this.passwordResets.clear();
+    this.events.push({
+      action: 'auth.password.changed',
+      entityType: 'User',
+      actorId: input.userId,
+    });
+    return true;
+  }
 }
 
 const config: AppConfig = {
@@ -109,6 +126,48 @@ const config: AppConfig = {
 };
 
 describe('foundation API', () => {
+  it('changes passwords only with current credentials and revokes existing sessions', async () => {
+    const app = createApp({ config, identityRepository: await testRepository() });
+    const client = request.agent(app);
+    const csrf = (await client.get('/api/v1/auth/csrf')).body.data.token;
+    await client
+      .post('/api/v1/auth/login')
+      .set('x-csrf-token', csrf)
+      .send({ email: 'editor@magaram.test', password: 'correct-horse-battery-staple' })
+      .expect(200);
+    await client
+      .post('/api/v1/auth/password-change')
+      .send({
+        currentPassword: 'correct-horse-battery-staple',
+        password: 'different-test-password',
+      })
+      .expect(403);
+    await client
+      .post('/api/v1/auth/password-change')
+      .set('x-csrf-token', csrf)
+      .send({ currentPassword: 'wrong-current-password', password: 'different-test-password' })
+      .expect(403);
+    await client.get('/api/v1/me').expect(200);
+    await client
+      .post('/api/v1/auth/password-change')
+      .set('x-csrf-token', csrf)
+      .send({
+        currentPassword: 'correct-horse-battery-staple',
+        password: 'different-test-password',
+      })
+      .expect(200);
+    await client.get('/api/v1/me').expect(401);
+    await client
+      .post('/api/v1/auth/login')
+      .set('x-csrf-token', csrf)
+      .send({ email: 'editor@magaram.test', password: 'correct-horse-battery-staple' })
+      .expect(401);
+    await client
+      .post('/api/v1/auth/login')
+      .set('x-csrf-token', csrf)
+      .send({ email: 'editor@magaram.test', password: 'different-test-password' })
+      .expect(200);
+  });
   it('returns a safe health response and version', async () => {
     const app = createApp({ config, identityRepository: await testRepository() });
 

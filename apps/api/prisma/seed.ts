@@ -32,6 +32,24 @@ const roles = [
 ] as const;
 
 async function seed() {
+  for (const [kind, slug, name] of [
+    ['category', 'local', 'உள்ளூர்'],
+    ['category', 'tamil-nadu', 'தமிழ்நாடு'],
+    ['category', 'business', 'வணிகம்'],
+    ['category', 'education', 'கல்வி'],
+    ['category', 'life', 'வாழ்க்கை'],
+    ['category', 'arts', 'கலை'],
+    ['category', 'politics', 'அரசியல்'],
+    ['location', 'chennai', 'சென்னை'],
+    ['location', 'coimbatore', 'கோவை'],
+    ['location', 'madurai', 'மதுரை'],
+    ['location', 'thanjavur', 'தஞ்சாவூர்'],
+  ])
+    await prisma.taxonomy.upsert({
+      where: { kind_slug: { kind, slug } },
+      update: {},
+      create: { kind, slug, name },
+    });
   const permissionRecords = new Map<string, { id: string }>();
   for (const permission of permissions) {
     const record = await prisma.permission.upsert({

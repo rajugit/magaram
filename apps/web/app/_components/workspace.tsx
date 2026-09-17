@@ -7,6 +7,11 @@ import { Brand, Icon } from './brand';
 import { api } from '../_lib/api';
 import { demoArticles, navGroups, contactEmail } from '../_lib/data';
 import type { Article, ArticleStatus } from '../_lib/data';
+import { AccountSecurity } from './account-security';
+import { EditorialReview } from './editorial-review';
+import { AiWorkbench } from './ai-workbench';
+import { Taxonomy } from './taxonomy';
+import type { TaxonomyItem } from './taxonomy';
 
 const labels: Record<string, string> = {
   DRAFT: 'Draft',
@@ -27,8 +32,15 @@ export function Status({ status }: { status: string }) {
     </span>
   );
 }
-export function Workspace({ path, initialPreview = false }: { path: string[]; initialPreview?: boolean }) {
+export function Workspace({
+  path,
+  initialPreview = false,
+}: {
+  path: string[];
+  initialPreview?: boolean;
+}) {
   const page = path[0] || 'overview';
+  const articleId = page === 'articles' && path[1] !== 'new' ? path[1] : undefined;
   const router = useRouter();
   const [demo, setDemo] = useState(initialPreview);
   const [ready, setReady] = useState(initialPreview);
@@ -43,7 +55,7 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
   useEffect(() => {
     let active = true;
     const preview = initialPreview || sessionStorage.getItem('magaram-preview') === 'true';
-    if(initialPreview) sessionStorage.setItem('magaram-preview','true');
+    if (initialPreview) sessionStorage.setItem('magaram-preview', 'true');
     setDemo(preview);
     setError('');
     setReady(false);
@@ -53,11 +65,21 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
       setReady(true);
       return;
     }
-    api<{ user: { displayName: string } }>('/me')
+    api<{ user: { displayName: string; permissions: string[] } }>('/me')
       .then(async (me) => {
         if (!active) return;
         setUser(me.user.displayName);
+        if (
+          !me.user.permissions.some((p) =>
+            ['*', 'articles:draft', 'articles:review', 'articles:fact-check'].includes(p),
+          )
+        ) {
+          setArticles([]);
+          return;
+        }
         const data = await api<{ items: Article[] }>('/articles?limit=100');
+        if (articleId && !data.items.some((article) => article.id === articleId))
+          data.items.push(await api<Article>(`/articles/${articleId}`));
         if (active) setArticles(data.items);
       })
       .catch((e) => {
@@ -69,7 +91,7 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
     return () => {
       active = false;
     };
-  }, [page, initialPreview]);
+  }, [page, articleId, initialPreview]);
   useEffect(() => {
     if (demo || !ready) return;
     if (page === 'audit')
@@ -140,6 +162,7 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
           <div>
             <b>{user || 'Your workspace'}</b>
             <small>{demo ? 'Sample session' : 'Editorial team'}</small>
+            <Link href="/admin/account">Account security</Link>
           </div>
           <button
             className="icon-button"
@@ -407,6 +430,7 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
                   {!demo && <pre>{JSON.stringify(aux, null, 2)}</pre>}
                 </section>
               )}
+              {['settings', 'account'].includes(page) && <AccountSecurity demo={demo} />}
               {page === 'audit' && (
                 <section className="panel">
                   <div className="panel-heading">
@@ -424,7 +448,19 @@ export function Workspace({ path, initialPreview = false }: { path: string[]; in
                   )}
                 </section>
               )}
-              {!['overview', 'articles', 'review', 'media', 'settings', 'audit'].includes(page) && (
+              {page === 'ai' && <AiWorkbench articles={articles} demo={demo} />}
+              {page === 'taxonomy' && <Taxonomy demo={demo} />}
+              {![
+                'overview',
+                'articles',
+                'review',
+                'media',
+                'settings',
+                'audit',
+                'ai',
+                'account',
+                'taxonomy',
+              ].includes(page) && (
                 <section className="panel empty-state">
                   <Icon name={page === 'ai' ? 'spark' : 'clock'} size={40} />
                   <span className="eyebrow">UPCOMING PHASE</span>
@@ -524,13 +560,45 @@ function ArticleEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [source, setSource] = useState(article?.sources[0]?.url || '');
-  const [claim, setClaim] = useState(article?.claims[0]?.text || '');
+  const [sources, setSources] = useState(
+    article?.sources.map(({ label, url }) => ({ label, url })) || [{ label: '', url: '' }],
+  );
+  const [claims, setClaims] = useState(
+    article?.claims.map(({ text }) => ({ text })) || [{ text: '' }],
+  );
+  const [scheduledAt, setScheduledAt] = useState('');
+  const editable = !article || ['DRAFT', 'AI_DRAFT'].includes(article.status);
+  const [taxonomy, setTaxonomy] = useState<TaxonomyItem[]>([]);
+  const [media, setMedia] = useState<{ id: string; alt: string; credit: string }[]>([]);
+  useEffect(() => {
+    if (demo) return;
+    let active = true;
+    api<TaxonomyItem[]>('/taxonomy')
+      .then((items) => {
+        if (active) setTaxonomy(items);
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
+    if (editable)
+      api<typeof media>('/media')
+        .then((items) => {
+          if (active) setMedia(items);
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        });
+    return () => {
+      active = false;
+    };
+  }, [demo, editable]);
   const transitions: Partial<Record<ArticleStatus, ArticleStatus[]>> = {
     DRAFT: ['EDITOR_REVIEW'],
+    AI_DRAFT: ['EDITOR_REVIEW'],
     EDITOR_REVIEW: ['DRAFT', 'FACT_CHECK'],
     FACT_CHECK: ['DRAFT', 'APPROVED'],
-    APPROVED: ['PUBLISHED', 'DRAFT'],
+    APPROVED: ['SCHEDULED', 'PUBLISHED', 'DRAFT'],
+    SCHEDULED: ['DRAFT'],
     PUBLISHED: ['ARCHIVED'],
     UPDATED: ['ARCHIVED'],
   };
@@ -551,9 +619,13 @@ function ArticleEditor({
           ...f,
           sensitive: f.sensitive === 'on',
           sponsored: f.sponsored === 'on',
-          sources: source ? [{ label: 'Editorial source', url: source }] : [],
-          claims: claim ? [{ text: claim }] : [],
-          tags: [],
+          sources: sources.filter((source) => source.url.trim()),
+          claims: claims.filter((claim) => claim.text.trim()),
+          tags: String(f.tags || '')
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          imageId: f.imageId || null,
           ...(article ? { version: article.version } : {}),
         }),
       });
@@ -632,23 +704,68 @@ function ArticleEditor({
           <section className="panel editor-fields">
             <h3>Story details</h3>
             <label>
+              SEO title
+              <input name="seoTitle" maxLength={250} defaultValue={article?.seoTitle || ''} />
+            </label>
+            <label>
+              SEO description
+              <textarea
+                name="seoDescription"
+                maxLength={320}
+                defaultValue={article?.seoDescription || ''}
+              />
+            </label>
+            <label>
+              Story image
+              <select name="imageId" defaultValue={article?.image?.id || ''}>
+                <option value="">No image</option>
+                {article?.image && !media.some((item) => item.id === article.image!.id) && (
+                  <option value={article.image.id}>{article.image.alt}</option>
+                )}
+                {media.map((item) => (
+                  <option value={item.id} key={item.id}>
+                    {item.alt} · {item.credit}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Tags (comma-separated)
+              <input name="tags" defaultValue={article?.tags.join(', ')} />
+            </label>
+            <label>
               Category
               <select name="category" defaultValue={article?.category || 'உள்ளூர்'}>
-                {['உள்ளூர்', 'தமிழ்நாடு', 'வணிகம்', 'கல்வி', 'வாழ்க்கை', 'கலை', 'அரசியல்'].map(
-                  (x) => (
-                    <option key={x}>{x}</option>
-                  ),
-                )}
+                {[
+                  ...new Set([
+                    article?.category || 'உள்ளூர்',
+                    ...(demo
+                      ? ['உள்ளூர்', 'தமிழ்நாடு', 'வணிகம்', 'கல்வி', 'வாழ்க்கை', 'கலை', 'அரசியல்']
+                      : taxonomy
+                          .filter((item) => item.kind === 'category')
+                          .map((item) => item.name)),
+                  ]),
+                ].map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
               </select>
             </label>
             <label>
               Location
               <input
                 name="location"
+                list="registered-locations"
                 required
                 defaultValue={article?.location || 'சென்னை'}
                 maxLength={100}
               />
+              <datalist id="registered-locations">
+                {taxonomy
+                  .filter((item) => item.kind === 'location')
+                  .map((item) => (
+                    <option key={item.id} value={item.name} />
+                  ))}
+              </datalist>
             </label>
             <label>
               Story type
@@ -679,24 +796,70 @@ function ArticleEditor({
           </section>
           <section className="panel editor-fields">
             <h3>Sources & verification</h3>
-            <label>
-              Source URL
-              <input
-                type="url"
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                placeholder="https://…"
-              />
-            </label>
-            <label>
-              Claim to verify
-              <textarea
-                rows={3}
-                value={claim}
-                onChange={(e) => setClaim(e.target.value)}
-                placeholder="What needs independent verification?"
-              />
-            </label>
+            {sources.map((source, index) => (
+              <div key={index}>
+                <label>
+                  Source name
+                  <input
+                    value={source.label}
+                    minLength={2}
+                    maxLength={250}
+                    onChange={(e) =>
+                      setSources(
+                        sources.map((s, i) => (i === index ? { ...s, label: e.target.value } : s)),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Source URL
+                  <input
+                    type="url"
+                    value={source.url}
+                    onChange={(e) =>
+                      setSources(
+                        sources.map((s, i) => (i === index ? { ...s, url: e.target.value } : s)),
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={() => setSources(sources.filter((_, i) => i !== index))}
+                >
+                  Remove source
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="button secondary"
+              disabled={sources.length >= 30}
+              onClick={() => setSources([...sources, { label: '', url: '' }])}
+            >
+              Add source
+            </button>
+            {claims.map((claim, index) => (
+              <label key={index}>
+                Claim to verify
+                <textarea
+                  rows={3}
+                  value={claim.text}
+                  onChange={(e) =>
+                    setClaims(claims.map((c, i) => (i === index ? { text: e.target.value } : c)))
+                  }
+                />
+              </label>
+            ))}
+            <button
+              type="button"
+              className="button secondary"
+              disabled={claims.length >= 30}
+              onClick={() => setClaims([...claims, { text: '' }])}
+            >
+              Add claim
+            </button>
             <p className="fineprint">
               Another editor must verify your sources and approve publication.
             </p>
@@ -711,24 +874,46 @@ function ArticleEditor({
               {message}
             </p>
           )}
-          <button className="button primary full" disabled={busy}>
+          {!editable && (
+            <p className="notice">
+              Return this story to Draft before editing. Published stories use the correction form
+              below.
+            </p>
+          )}
+          <button className="button primary full" disabled={busy || !editable}>
             {busy ? 'Saving…' : demo ? 'Validate sample draft' : 'Save draft'}
             <Icon name="check" size={18} />
           </button>
+          {article?.status === 'APPROVED' && (
+            <label>
+              Schedule in your local time
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+              />
+            </label>
+          )}
           {article &&
             (transitions[article.status] || []).map((target) => (
               <button
                 key={target}
                 type="button"
                 className="button secondary full"
-                disabled={demo || busy}
+                disabled={demo || busy || (target === 'SCHEDULED' && !scheduledAt)}
                 onClick={async () => {
                   setBusy(true);
                   setError('');
                   try {
                     await api(`/articles/${article.id}/transition`, {
                       method: 'POST',
-                      body: JSON.stringify({ status: target, version: article.version }),
+                      body: JSON.stringify({
+                        status: target,
+                        version: article.version,
+                        ...(target === 'SCHEDULED'
+                          ? { scheduledAt: new Date(scheduledAt).toISOString() }
+                          : {}),
+                      }),
                     });
                     await onSaved();
                   } catch (e) {
@@ -743,6 +928,14 @@ function ArticleEditor({
             ))}
         </aside>
       </form>
+      {article && (
+        <EditorialReview
+          key={`${article.id}-${article.version}`}
+          article={article}
+          demo={demo}
+          onSaved={onSaved}
+        />
+      )}
       {!!article?.corrections.length && (
         <section className="panel editor-fields">
           <h3>Corrections</h3>

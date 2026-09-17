@@ -1,44 +1,18 @@
-# Implementation Plan
+# Implementation plan
 
-## Phase 0 status
+Updated 2026-09-17. The user authorized continuing through successive phases with previews; another command-per-phase approval is not required. Provider selection, secret configuration, new spending and other material scope changes still require the appropriate user decision. The current request prioritizes testing, committing, pushing and deploying the existing milestone; DNS changes are deferred and email is on hold.
 
-Completed as documentation only. The workspace is empty; no source, dependencies, databases, or deployment artifacts were modified.
+The repository is implemented and deployed as an AWS preview; it is not empty. Both foundation and editorial migrations have been applied. DELIVERY_TRACKER.md is the canonical status record.
 
-## Phase 1 status
+## Current sequence
 
-Completed on 2026-09-15. The workspace now contains a tested Next.js/Express/worker foundation, identity/RBAC API, Prisma schema and initial migration, operation scripts, configuration sample, and quality commands. See [Phase 1 Foundation](./PHASE_1_FOUNDATION.md) for the implementation and verification record.
+1. Phase 1 core foundation: locally verified; release status recorded separately. Live email remains inactive.
+2. Phase 2 CMS: core database workflow verified; multi-source editor, fact-check evidence, scheduling, corrections, revision history, taxonomy enforcement, author assignment and media selection/access hardening added. Finish media-security/rights hardening and broader UI acceptance before calling the whole phase complete.
+3. Phase 3 AI: source-bound prompt preparation, persisted proposal history, safe validation, independent acceptance/rejection, idempotency, daily request limits, timeouts and local lexical duplicate detection implemented and tested. Live provider integration, monetary cost reporting and real-model Tamil output evaluation remain pending. Generation is explicitly inactive.
+4. Phase 4 public website and Phase 5 SEO: published-only content, accessibility, responsive layouts, trust pages, metadata, sitemaps and feeds.
+5. Phases 6–12: official social integrations; verified local businesses; advertising; moderated marketplaces; audience subscriptions; media services; reconciled revenue reporting. Payment/social/email providers must be chosen and tested, not simulated as live.
+6. Phase 13: continue hardening the low-cost AWS preview, backups, restoration and domain mapping when requested. Existing Lightsail instance and budget are retained.
+7. Phase 14: automated quality gates, reviewed releases and rollback testing.
+8. Phase 15: integrated security, accessibility, load, recovery and operational launch acceptance.
 
-## Approval-gated plan
-
-| Phase | Scope                                                                                                             | Exit evidence                                                           |
-| ----- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1     | Identity, RBAC, API conventions, validation, logging, audit, configuration, database conventions, queue readiness | Tests, lint/typecheck, security review, docs.                           |
-| 2     | Editorial CMS: articles, taxonomy, authors, sources, claims, facts, revisions, corrections, media                 | Workflow/authorization tests and migration evidence.                    |
-| 3     | AI newsroom                                                                                                       | Policy gates, audit records, provider failure handling, Tamil fixtures. |
-| 4     | Public website                                                                                                    | Responsive/accessibility checks and route coverage.                     |
-| 5     | SEO                                                                                                               | Metadata/schema/sitemap/RSS tests.                                      |
-| 6     | Social distribution                                                                                               | Official-provider, consent, webhook, and retry tests.                   |
-| 7     | Magaram Local                                                                                                     | Directory/verification/lead consent tests.                              |
-| 8     | Advertising                                                                                                       | Campaign, disclosure, payment, ledger, analytics tests.                 |
-| 9     | Marketplace expansion                                                                                             | Moderation, entitlement, transaction and role tests.                    |
-| 10    | Audience monetization                                                                                             | Subscription, newsletter, preference/unsubscribe tests.                 |
-| 11    | Media business                                                                                                    | Creator, studio, events, intelligence, API governance tests.            |
-| 12    | Revenue intelligence                                                                                              | Reconciled-data reporting and non-fabrication tests.                    |
-| 13    | AWS production                                                                                                    | IaC, environment, backup/restore, operational runbook evidence.         |
-| 14    | CI/CD                                                                                                             | Required quality gates, deployments, rollback, smoke tests.             |
-| 15    | Production readiness                                                                                              | Security, load, accessibility, recovery, and launch checklist.          |
-
-## Phase 1 implementation record
-
-Created the root workspace configuration; `apps/web`, `apps/api`, and `apps/worker`; the initial Prisma migration; identity/audit/RBAC/queue/readiness modules; a regression suite; sample environment configuration; and local operating instructions. No real database migration was run because no MySQL environment was supplied.
-
-## Phase 1 decisions made
-
-- Adopted a three-app workspace: Next.js web, Express API, and BullMQ worker.
-- Adopted Prisma/MySQL conventions and Redis/BullMQ abstractions; real infrastructure remains unconfigured.
-- Implemented server-side sessions, RBAC, audit records, password reset protocol, and temporary lockouts; optional 2FA is deferred.
-- Deferred provider choices for email, AI, payments, analytics, and social integrations.
-
-## Next action
-
-Await the exact command `APPROVE PHASE 2` before adding editorial CMS data or features.
+Each phase requires real persisted workflows, authorization/validation tests and an honest preview. Sample pages and inactive providers are never evidence of complete production functionality.

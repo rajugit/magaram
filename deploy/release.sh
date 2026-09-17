@@ -5,6 +5,7 @@ release_tag=${1:?commit SHA required}
 if [[ ! "$release_tag" =~ ^[a-f0-9]{40}$ ]]; then exit 2; fi
 export RELEASE_TAG="$release_tag"
 test -f /etc/magaram/runtime.env
+if test -x /usr/local/sbin/magaram-backup; then /usr/local/sbin/magaram-backup; fi
 docker build -f deploy/Dockerfile -t "magaram:$release_tag" .
 docker compose -f deploy/compose.yaml up -d --wait mysql redis
 docker run --rm --network host --env-file /etc/magaram/runtime.env \
@@ -17,9 +18,9 @@ if ! test -f /etc/magaram/admin-initialized; then
     node --import tsx prisma/seed-super-admin.ts
   touch /etc/magaram/admin-initialized
 fi
-docker compose -f deploy/compose.yaml up -d api web
+docker compose -f deploy/compose.yaml up -d api web worker
 for attempt in $(seq 1 30); do
-  if curl --fail --silent http://127.0.0.1:4000/ready >/dev/null && curl --fail --silent http://127.0.0.1:3000/preview/2 >/dev/null; then
+  if curl --fail --silent http://127.0.0.1:4000/ready >/dev/null && curl --fail --silent http://127.0.0.1:3000/preview/3 >/dev/null && test "$(docker inspect -f '{{.State.Running}}' magaram-worker-1)" = true; then
     ln -sfn "$PWD" /opt/magaram/current
     install -m 755 deploy/backup.sh /usr/local/sbin/magaram-backup
     install -m 644 deploy/magaram-backup.service /etc/systemd/system/magaram-backup.service

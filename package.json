@@ -16,6 +16,7 @@
     "dev": "pnpm --parallel --filter @magaram/web --filter @magaram/api --filter @magaram/worker dev",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",
+    "test:integration": "node --env-file=.env scripts/test-integration.mjs",
     "typecheck": "pnpm -r --if-present typecheck",
     "db:validate": "pnpm --filter @magaram/api db:validate",
     "format:check": "prettier --check ."

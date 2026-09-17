@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { ApiError, sendSuccess } from './api-response.js';
 import { requireAuthentication, requirePermission } from './rbac.js';
 import type { AuthenticatedUser } from './identity.js';
+import { publicationReady } from './maintenance.js';
 
 export const states = [
   'DRAFT',
@@ -86,12 +87,86 @@ const detail = {
   corrections: { orderBy: { createdAt: 'desc' as const } },
 };
 const published = ['PUBLISHED', 'UPDATED'] as const;
+async function validateArticleReferences(
+  tx: Prisma.TransactionClient,
+  input: z.infer<typeof articleSchema>,
+  actor: AuthenticatedUser,
+) {
+  const taxonomy = await tx.taxonomy.findMany({
+    where: {
+      OR: [
+        { kind: 'category', name: input.category },
+        { kind: 'location', name: input.location },
+        { kind: 'tag', name: { in: input.tags } },
+      ],
+    },
+  });
+  if (
+    !taxonomy.some((item) => item.kind === 'category' && item.name === input.category) ||
+    !taxonomy.some((item) => item.kind === 'location' && item.name === input.location) ||
+    input.tags.some((tag) => !taxonomy.some((item) => item.kind === 'tag' && item.name === tag))
+  )
+    throw new ApiError(
+      422,
+      'UNKNOWN_TAXONOMY',
+      'Choose registered categories, locations and tags. An editor can add them in Taxonomy.',
+    );
+  if (input.imageId) {
+    const image = await tx.mediaAsset.findUnique({
+      where: { id: input.imageId },
+      include: {
+        articles: {
+          where: {
+            status: { in: [...published] },
+            publishedAt: { lte: new Date() },
+            isDemo: false,
+          },
+          take: 1,
+        },
+      },
+    });
+    if (
+      !image ||
+      (image.ownerId !== actor.id && !can(actor, 'articles:review') && !image.articles.length)
+    )
+      throw new ApiError(
+        422,
+        'INVALID_MEDIA',
+        'Choose an image you own or may use from the published library.',
+      );
+  }
+}
+// Public responses must never expose internal verification notes, actor IDs or revisions.
+export const publicArticleSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  summary: true,
+  body: true,
+  type: true,
+  category: true,
+  location: true,
+  tags: true,
+  sponsored: true,
+  publishedAt: true,
+  updatedAt: true,
+  seoTitle: true,
+  seoDescription: true,
+  author: { select: { displayName: true } },
+  image: { select: { id: true, alt: true, credit: true } },
+  corrections: {
+    select: { id: true, reason: true, createdAt: true },
+    orderBy: { createdAt: 'desc' as const },
+  },
+} satisfies Prisma.ArticleSelect;
 export function guardTransition(
   article: {
     status: string;
     authorId: string;
     sources: { verified: boolean }[];
     claims: { status: string }[];
+    approvedBy?: string | null;
+    approvedAt?: Date | null;
   },
   target: string,
   actor: AuthenticatedUser,
@@ -132,6 +207,19 @@ export function guardTransition(
         'Verify every source and claim before approval.',
       );
   }
+  if (
+    ['PUBLISHED', 'SCHEDULED'].includes(target) &&
+    !publicationReady({
+      ...article,
+      approvedBy: article.approvedBy ?? null,
+      approvedAt: article.approvedAt ?? null,
+    })
+  )
+    throw new ApiError(
+      422,
+      'VERIFICATION_REQUIRED',
+      'Independent approval and verified sources and claims are required.',
+    );
 }
 export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router {
   const router = Router();
@@ -139,6 +227,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     const query = pagination.parse(req.query);
     const where: Prisma.ArticleWhereInput = {
       status: { in: [...published] },
+      isDemo: false,
       publishedAt: { lte: new Date() },
       ...(query.category ? { category: query.category } : {}),
       ...(query.location ? { location: query.location } : {}),
@@ -149,7 +238,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     const [items, total] = await Promise.all([
       db.article.findMany({
         where,
-        include: detail,
+        select: publicArticleSelect,
         orderBy: { publishedAt: 'desc' },
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -162,10 +251,11 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     const item = await db.article.findFirst({
       where: {
         slug: String(req.params.slug),
+        isDemo: false,
         status: { in: [...published] },
         publishedAt: { lte: new Date() },
       },
-      include: detail,
+      select: publicArticleSelect,
     });
     if (!item) throw new ApiError(404, 'NOT_FOUND', 'Article not found.');
     sendSuccess(res, item);
@@ -185,16 +275,36 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
       })
       .strict()
       .parse(req.body);
-    sendSuccess(res, await db.taxonomy.create({ data }));
+    const item = await db.$transaction(async (tx) => {
+      const item = await tx.taxonomy.create({ data });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.auth!.id,
+          action: 'taxonomy.created',
+          entityType: 'Taxonomy',
+          entityId: item.id,
+          requestId: res.locals.requestId,
+          metadata: { kind: data.kind, slug: data.slug },
+        },
+      });
+      return item;
+    });
+    sendSuccess(res, item);
   });
-  router.get('/authors', async (_req, res) =>
+  router.get('/authors', requireAuthentication(), async (_req, res) =>
     sendSuccess(
       res,
       await db.user.findMany({
         where: {
           deletedAt: null,
           status: 'ACTIVE',
-          roles: { some: { role: { code: { in: ['EDITOR', 'REPORTER'] } } } },
+          roles: {
+            some: {
+              role: {
+                permissions: { some: { permission: { code: { in: ['*', 'articles:draft'] } } } },
+              },
+            },
+          },
         },
         select: { id: true, displayName: true },
         take: 100,
@@ -245,6 +355,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
   router.post('/articles', requirePermission('articles:draft'), csrf, async (req, res) => {
     const { sources, claims, ...input } = articleSchema.parse(req.body);
     const item = await db.$transaction(async (tx) => {
+      await validateArticleReferences(tx, { ...input, sources, claims }, req.auth!);
       const item = await tx.article.create({
         data: {
           ...input,
@@ -287,6 +398,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
         throw new ApiError(403, 'FORBIDDEN', 'You cannot edit this article.');
       if (!['DRAFT', 'AI_DRAFT'].includes(current.status))
         throw new ApiError(409, 'REVIEW_LOCKED', 'Return the article to draft before editing.');
+      await validateArticleReferences(tx, { ...data, sources, claims }, req.auth!);
       const result = await tx.article.updateMany({
         where: { id: current.id, version },
         data: { ...data, version: { increment: 1 }, approvedBy: null, approvedAt: null },
@@ -326,6 +438,72 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     });
     sendSuccess(res, item);
   });
+  router.post(
+    '/articles/:id/author',
+    requirePermission('articles:review'),
+    csrf,
+    async (req, res) => {
+      const data = z
+        .object({ authorId: z.string().max(191), version: z.number().int().positive() })
+        .strict()
+        .parse(req.body);
+      await db.$transaction(async (tx) => {
+        const author = await tx.user.findFirst({
+          where: {
+            id: data.authorId,
+            status: 'ACTIVE',
+            deletedAt: null,
+            roles: {
+              some: {
+                role: {
+                  permissions: { some: { permission: { code: { in: ['*', 'articles:draft'] } } } },
+                },
+              },
+            },
+          },
+        });
+        if (!author) throw new ApiError(422, 'INVALID_AUTHOR', 'Choose an active newsroom author.');
+        const id = String(req.params.id);
+        const changed = await tx.article.updateMany({
+          where: { id, version: data.version, status: { in: ['DRAFT', 'AI_DRAFT'] } },
+          data: {
+            authorId: author.id,
+            approvedBy: null,
+            approvedAt: null,
+            scheduledAt: null,
+            version: { increment: 1 },
+          },
+        });
+        if (!changed.count)
+          throw new ApiError(409, 'VERSION_CONFLICT', 'Only the current draft may be reassigned.');
+        await tx.articleSource.updateMany({ where: { articleId: id }, data: { verified: false } });
+        await tx.articleClaim.updateMany({
+          where: { articleId: id },
+          data: { status: 'UNVERIFIED', evidence: '', checkedBy: null },
+        });
+        const updated = await tx.article.findUniqueOrThrow({ where: { id }, include: detail });
+        await tx.articleRevision.create({
+          data: {
+            articleId: id,
+            actorId: req.auth!.id,
+            version: updated.version,
+            snapshot: JSON.parse(JSON.stringify(updated)),
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorId: req.auth!.id,
+            action: 'article.author.assigned',
+            entityType: 'Article',
+            entityId: id,
+            requestId: res.locals.requestId,
+            metadata: { authorId: author.id },
+          },
+        });
+      });
+      sendSuccess(res, { saved: true });
+    },
+  );
   router.post('/articles/:id/transition', requireAuthentication(), csrf, async (req, res) => {
     const data = z
       .object({
@@ -344,6 +522,29 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
       if (article.authorId !== req.auth!.id && !can(req.auth!, 'articles:review'))
         throw new ApiError(403, 'FORBIDDEN', 'Editor permission required.');
       guardTransition(article, data.status, req.auth!);
+      if (['PUBLISHED', 'SCHEDULED'].includes(data.status)) {
+        const approver = await tx.user.findFirst({
+          where: {
+            id: article.approvedBy!,
+            status: 'ACTIVE',
+            deletedAt: null,
+            roles: {
+              some: {
+                role: {
+                  permissions: { some: { permission: { code: { in: ['*', 'articles:review'] } } } },
+                },
+              },
+            },
+          },
+          select: { id: true },
+        });
+        if (!approver)
+          throw new ApiError(
+            422,
+            'APPROVAL_EXPIRED',
+            'The approving editor no longer has review access. Return to Draft for a new review.',
+          );
+      }
       if (
         data.status === 'SCHEDULED' &&
         (!data.scheduledAt || new Date(data.scheduledAt) <= new Date())
@@ -417,7 +618,10 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
         .strict()
         .parse(req.body);
       await db.$transaction(async (tx) => {
-        const article = await tx.article.findUnique({ where: { id: String(req.params.id) } });
+        const article = await tx.article.findUnique({
+          where: { id: String(req.params.id) },
+          include: { sources: true, claims: true },
+        });
         if (!article || article.status !== 'FACT_CHECK')
           throw new ApiError(409, 'INVALID_TRANSITION', 'Article must be in fact checking.');
         if (article.authorId === req.auth!.id)
@@ -425,6 +629,17 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
             403,
             'INDEPENDENT_REVIEW_REQUIRED',
             'Another person must verify your reporting.',
+          );
+        if (
+          new Set(data.sources.map((s) => s.id)).size !== data.sources.length ||
+          new Set(data.claims.map((c) => c.id)).size !== data.claims.length ||
+          data.sources.some((s) => !article.sources.some((existing) => existing.id === s.id)) ||
+          data.claims.some((c) => !article.claims.some((existing) => existing.id === c.id))
+        )
+          throw new ApiError(
+            422,
+            'INVALID_VERIFICATION',
+            'Use unique source and claim IDs belonging to this article.',
           );
         const changed = await tx.article.updateMany({
           where: { id: article.id, version: data.version },
@@ -442,6 +657,18 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
             where: { id: claim.id, articleId: article.id },
             data: { status: claim.status, evidence: claim.evidence, checkedBy: req.auth!.id },
           });
+        const verified = await tx.article.findUniqueOrThrow({
+          where: { id: article.id },
+          include: detail,
+        });
+        await tx.articleRevision.create({
+          data: {
+            articleId: article.id,
+            actorId: req.auth!.id,
+            version: verified.version,
+            snapshot: JSON.parse(JSON.stringify(verified)),
+          },
+        });
         await tx.auditLog.create({
           data: {
             actorId: req.auth!.id,
@@ -505,8 +732,30 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
       sendSuccess(res, { saved: true });
     },
   );
-  router.get('/media', requirePermission('articles:draft'), async (_req, res) =>
-    sendSuccess(res, await db.mediaAsset.findMany({ take: 100, orderBy: { createdAt: 'desc' } })),
+  router.get('/media', requirePermission('articles:draft'), async (req, res) =>
+    sendSuccess(
+      res,
+      await db.mediaAsset.findMany({
+        where: can(req.auth!, 'articles:review')
+          ? {}
+          : {
+              OR: [
+                { ownerId: req.auth!.id },
+                {
+                  articles: {
+                    some: {
+                      status: { in: [...published] },
+                      publishedAt: { lte: new Date() },
+                      isDemo: false,
+                    },
+                  },
+                },
+              ],
+            },
+        take: 100,
+        orderBy: { createdAt: 'desc' },
+      }),
+    ),
   );
   router.post(
     '/media',
@@ -561,10 +810,25 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     const asset = await db.mediaAsset.findUnique({
       where: { id: String(req.params.id) },
       include: {
-        articles: { where: { status: { in: [...published] } }, select: { id: true }, take: 1 },
+        articles: {
+          where: {
+            status: { in: [...published] },
+            publishedAt: { lte: new Date() },
+            isDemo: false,
+          },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
-    if (!asset || (!asset.articles.length && !req.auth))
+    if (
+      !asset ||
+      (!asset.articles.length &&
+        (!req.auth ||
+          (asset.ownerId !== req.auth.id &&
+            !can(req.auth, 'articles:review') &&
+            !can(req.auth, 'articles:fact-check'))))
+    )
       throw new ApiError(404, 'NOT_FOUND', 'Image not found.');
     res.setHeader('Content-Type', asset.mime);
     res.setHeader('Cache-Control', 'private, max-age=60');

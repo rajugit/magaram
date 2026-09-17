@@ -16,7 +16,7 @@ export default function Previews() {
         Explore what’s built, what’s in progress, and what needs a live service connection.
       </p>
       <div className="notice" style={{ marginTop: 25 }}>
-        Contact: magaram.in@gmail.com · Hosting: AWS · Database execution awaiting permission
+        Contact: magaram.in@gmail.com · Hosting: AWS preview · Email and AI providers not connected
       </div>
       <div className="phase-grid">
         {phaseNames.map((name, i) => (
@@ -29,10 +29,14 @@ export default function Previews() {
               {i === 0
                 ? 'Complete'
                 : i === 1
-                  ? 'Built · integration pending'
+                  ? 'Core verified locally'
                   : i === 2
                     ? 'In progress'
-                    : 'Planned'}
+                    : i === 3
+                      ? 'Preparation built · provider pending'
+                      : i === 13
+                        ? 'AWS preview live'
+                        : 'Planned'}
             </span>
             <p>
               {i === 0
@@ -41,16 +45,23 @@ export default function Previews() {
                   ? 'Brand, sign-in, sessions, permissions, and governance.'
                   : i === 2
                     ? 'Article editor, review workflow, source verification, revisions and media.'
-                    : 'Implementation follows the preceding milestone. This phase is not complete yet.'}
+                    : i === 3
+                      ? 'Source-bound prompts, local preparation, audit trail and proposal validation. No live AI generation.'
+                      : 'Implementation follows the preceding milestone. This phase is not complete yet.'}
             </p>
             {i === 1 && (
-              <Link className="button secondary" href="/login">
+              <Link className="button secondary" href="/preview/1">
                 Preview foundation <Icon name="arrow" size={16} />
               </Link>
             )}
             {i === 2 && (
-              <Link className="button secondary" href="/login">
+              <Link className="button secondary" href="/preview/2">
                 Open newsroom preview <Icon name="arrow" size={16} />
+              </Link>
+            )}
+            {i === 3 && (
+              <Link className="button secondary" href="/preview/3">
+                Preview AI safeguards <Icon name="arrow" size={16} />
               </Link>
             )}
           </article>

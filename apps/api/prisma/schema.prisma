@@ -47,6 +47,7 @@ model User {
   passwordResets  PasswordReset[]
   auditEvents     AuditLog[]  @relation("AuditActor")
   articles        Article[]
+  aiRuns          AiRun[]
 
   @@index([status])
   @@index([deletedAt])
@@ -190,6 +191,7 @@ model Article {
   claims ArticleClaim[]
   revisions ArticleRevision[]
   corrections Correction[]
+  aiRuns AiRun[]
 
   @@index([status, publishedAt])
   @@index([category, status])
@@ -259,4 +261,50 @@ model MediaAsset {
   ownerId String @db.VarChar(191)
   createdAt DateTime @default(now())
   articles Article[]
+}
+
+enum AiRunStatus {
+  RUNNING
+  READY
+  FAILED
+  ACCEPTED
+  REJECTED
+}
+
+model AiRun {
+  id String @id @default(cuid())
+  actorId String
+  actor User @relation(fields: [actorId], references: [id])
+  articleId String
+  article Article @relation(fields: [articleId], references: [id])
+  articleVersion Int
+  requestKey String @db.VarChar(64)
+  task String @db.VarChar(40)
+  status AiRunStatus @default(RUNNING)
+  promptVersion String @db.VarChar(80)
+  inputHash String @db.Char(64)
+  inputSnapshot Json
+  sourceIds Json
+  provider String @db.VarChar(100)
+  model String @db.VarChar(200)
+  output Json?
+  inputTokens Int?
+  outputTokens Int?
+  failureCode String? @db.VarChar(60)
+  reviewNote String? @db.Text
+  reviewedBy String? @db.VarChar(191)
+  reviewedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([actorId, requestKey])
+  @@index([articleId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model AiDailyUsage {
+  scope String @db.VarChar(191)
+  day String @db.Char(10)
+  requests Int @default(0)
+  @@id([scope, day])
 }

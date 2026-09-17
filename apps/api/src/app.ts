@@ -19,6 +19,8 @@ import {
 } from './identity.js';
 import type { IdentityRepository, PasswordResetDelivery } from './identity.js';
 import { PrismaIdentityRepository } from './prisma-identity-repository.js';
+import { aiRouter } from './ai.js';
+import type { AiProvider, AiLimits } from './ai-service.js';
 import { requireAuthentication, requirePermission } from './rbac.js';
 
 const SESSION_COOKIE = 'magaram_session';
@@ -43,6 +45,8 @@ export interface AppDependencies {
   config: AppConfig;
   identityRepository?: IdentityRepository;
   passwordResetDelivery?: PasswordResetDelivery;
+  aiProvider?: AiProvider;
+  aiLimits?: AiLimits;
   db?: PrismaClient;
   isReady?: () => Promise<boolean>;
 }
@@ -314,8 +318,40 @@ export function createApp(dependencies: AppDependencies): Express {
     }),
   );
 
+  if (dependencies.db)
+    app.use(
+      '/api/v1',
+      aiRouter(
+        dependencies.db,
+        csrfProtection(tokens),
+        dependencies.aiProvider,
+        dependencies.aiLimits,
+      ),
+    );
   app.get('/api/v1/me', requireAuthentication(), (request, response) =>
     sendSuccess(response, { user: presentUser(request.auth!) }),
+  );
+  app.post(
+    '/api/v1/auth/password-change',
+    requireAuthentication(),
+    csrfProtection(tokens),
+    async (req, res) => {
+      const data = z
+        .object({
+          currentPassword: z.string().min(1).max(256),
+          password: z.string().min(12).max(72),
+        })
+        .strict()
+        .parse(req.body);
+      await authentication.changePassword(
+        req.auth!,
+        data.currentPassword,
+        data.password,
+        res.locals.requestId,
+      );
+      res.clearCookie(SESSION_COOKIE, cookieOptions(config));
+      sendSuccess(res, {}, 'Password changed. All sessions have been signed out.');
+    },
   );
   app.get('/api/v1/settings', requirePermission('settings:read'), async (_request, response) => {
     if (!dependencies.db)

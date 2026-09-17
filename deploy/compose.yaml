@@ -29,6 +29,8 @@ services:
     restart: unless-stopped
     network_mode: host
     env_file: /etc/magaram/runtime.env
+    environment:
+      APP_VERSION: ${RELEASE_TAG:?set RELEASE_TAG}
     working_dir: /app/apps/api
     command: ["node", "dist/main.js"]
     volumes: ["/var/lib/magaram/uploads:/app/apps/api/uploads"]
@@ -36,6 +38,19 @@ services:
       mysql: {condition: service_healthy}
       redis: {condition: service_started}
     mem_limit: 512m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logs
+  worker:
+    image: magaram:${RELEASE_TAG:?set RELEASE_TAG}
+    restart: unless-stopped
+    network_mode: host
+    env_file: /etc/magaram/runtime.env
+    working_dir: /app/apps/worker
+    command: ["node", "dist/main.js"]
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis: {condition: service_started}
+    mem_limit: 384m
     security_opt: ["no-new-privileges:true"]
     logging: *logs
   web:

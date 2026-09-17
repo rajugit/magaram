@@ -43,6 +43,8 @@ References: [Lightsail pricing](https://aws.amazon.com/lightsail/pricing/) and [
 
 ## Owner-only administrator access
 
+The 2026-09-17 release candidate adds a 384 MB-limited maintenance worker to the existing server, without provisioning another AWS resource, and an additive migration for AI proposal history and quotas. Run the full build, API tests, isolated integration suite and targeted secret scan, then deploy an exact reviewed commit. The release script makes a database backup before building, applies migrations, and registers default Tamil categories/locations without resetting accounts. Verify the worker is running and recurring maintenance completes after deployment; API readiness alone does not prove worker health. The API APP_VERSION reports the deployed commit. DNS is deliberately unchanged; email and live AI generation stay inactive.
+
 Administrator email: `magaram.in@gmail.com`. To retrieve the generated password, run the following yourself in your own Terminal from the repository, with the `magaram` AWS profile configured. Do not ask an assistant to run this password-display command or paste its output into chat:
 
 ```sh

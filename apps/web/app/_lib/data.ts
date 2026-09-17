@@ -23,6 +23,8 @@ export type Article = {
   isDemo: boolean;
   version: number;
   tags: string[];
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   author: { id: string; displayName: string };
   authorId: string;
   publishedAt: string | null;
@@ -151,6 +153,7 @@ export const navGroups = [
     items: [
       ['Settings', '/admin/settings', 'settings'],
       ['Audit trail', '/admin/audit', 'shield'],
+      ['Taxonomy', '/admin/taxonomy', 'grid'],
       ['Phase previews', '/preview', 'grid'],
     ],
   },

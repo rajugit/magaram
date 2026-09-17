@@ -3,13 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./maintenance": {
+      "types": "./dist/maintenance.d.ts",
+      "default": "./dist/maintenance.js"
+    }
+  },
   "scripts": {
     "build": "tsc --outDir dist",
     "dev": "node --env-file=../../.env --import tsx --watch src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint src tests prisma --max-warnings=0",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json && tsc --noEmit -p tsconfig.tests.json",
     "db:generate": "prisma generate",
     "db:deploy": "node --env-file=../../.env node_modules/prisma/build/index.js migrate deploy",
     "db:seed": "node --env-file=../../.env --import tsx prisma/seed.ts",

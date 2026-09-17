@@ -42,6 +42,16 @@ Errors should not leak implementation details:
 - Signed, timestamped webhook verification and replay protection.
 - Contract, authorization, validation, and error-shape tests for every public endpoint.
 
+## Added in the 2026-09-17 release candidate
+
+- `POST /api/v1/auth/password-change`: authenticated current-password check; atomically revokes all sessions/reset tokens and records audit.
+- `POST /api/v1/articles/:id/author`: reviewer-only, current draft version only; resets verification and records revision/audit.
+- `POST /api/v1/taxonomy`: reviewer-only audited registration; draft saves require registered category/location/tag names.
+- Public `/news` projections exclude internal evidence and identities; unpublished media is owner/reviewer restricted.
+- `GET /api/v1/ai/status`: honest provider state. `POST /api/v1/ai/prepare`: authorized, version-bound local source packet and audit fingerprint. `POST /api/v1/ai/generate`: explicit 503 until provider implementation/configuration exists.
+
+Additional AI routes: GET /api/v1/ai/runs?articleId=… lists authorized proposal history; POST /api/v1/ai/runs/:id/review accepts/rejects with independent review and version guards; GET /api/v1/ai/duplicates?articleId=… performs an authorized local lexical comparison. POST /api/v1/ai/generate is deliberately unavailable until a provider is selected and integrated. All mutation endpoints retain CSRF/origin/permission checks. Deployment acceptance is separate from local test results.
+
 ## Initial endpoint priorities after approval
 
 Phase 1 should expose only health/readiness/version, authentication/session, current-user, roles/permissions, system configuration, and audit-log endpoints. Editorial, AI, social, commerce, and billing endpoints belong to their approved later phases.

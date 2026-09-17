@@ -21,6 +21,7 @@ const check = async (path, expected, options = {}) => {
 };
 await check('/ready', 200);
 await check('/preview/2', 200);
+await check('/preview/3', 200);
 await check('/api/v1/articles', 401);
 const csrf = await check('/api/v1/auth/csrf', 200);
 const csrfCookie = csrf.headers.get('set-cookie');
@@ -43,6 +44,10 @@ assert(/;\s*HttpOnly/i.test(sessionCookie));
 headers.Cookie += '; ' + sessionCookie.split(';')[0];
 await check('/api/v1/me', 200, { headers });
 await check('/api/v1/articles', 200, { headers });
+const aiStatus = (await (await check('/api/v1/ai/status', 200, { headers })).json()).data;
+assert.equal(aiStatus.generationEnabled, false, 'AI should be inactive for this release.');
+assert.equal(aiStatus.emailEnabled, false, 'Email should remain inactive.');
+await check('/api/v1/ai/generate', 503, { method: 'POST', headers, body: '{}' });
 await check('/api/v1/auth/logout', 200, { method: 'POST', headers });
 console.log(
   'Trusted TLS, secure session cookies, persisted authentication, authorization and logout passed.',

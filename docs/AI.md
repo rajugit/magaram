@@ -1,24 +1,22 @@
-# AI Newsroom Assessment and Governance Plan
+# Phase 3 — AI newsroom
 
-## Current assessment
+Status: persisted proposal workflow verified with an isolated test provider; no live AI provider is connected.
 
-No AI provider, prompt registry, background worker, editorial policy implementation, content record, cost tracking, or safety evaluation exists in the workspace.
+## Available now
 
-## Proposed capability boundary
+- Versioned Tamil-first prompt catalog: draft, summary, translation, SEO, social and claim extraction.
+- POST /api/v1/ai/prepare builds a local source packet from an authorized saved article at a specified version. It audits actor, task, prompt version, article version and SHA-256 input fingerprint. Raw reporting is not copied into the audit log or sent externally.
+- GET /api/v1/ai/status reports generationEnabled=false. POST /api/v1/ai/generate returns explicit 503 AI_PROVIDER_UNAVAILABLE; it never returns invented demonstration results.
+- Source material is serialized separately from system instructions. Prompts require attribution, uncertainty, sponsorship disclosure and independent human approval; prompt text cannot guarantee factual correctness.
+- Proposal schema rejects extra publication commands, invented source IDs and claims marked VERIFIED. Structural validation is not fact checking.
+- Preview /preview/3 shows the safeguards with sample reporting; /admin/ai allows authorized local preparation.
+- Durable proposal history, per-user/global daily request caps, explicit source-sharing consent, bounded output and request timeouts, and idempotent request keys are implemented. Failed or uncertain requests consume their reserved quota; there is no automatic paid retry.
+- Independent editors can accept or reject proposals with a reason and warning acknowledgement. Acceptance checks the article version, records a revision/audit, and resets verification. It never publishes. Social copy is stored for review, not posted externally.
+- Local duplicate checks use Unicode-normalized lexical similarity over accessible articles. They are not semantic plagiarism detection and send no data externally.
+- Isolated MySQL integration tests exercise persistence, replay, review independence, stale versions, rejection, malformed output, private provider errors, timeout, quota and disabled generation. The injected test fixture is never a runtime provider.
 
-AI may assist editors with Tamil headline and draft suggestions, translation, summaries, SEO metadata, social copy, alt text, entity/location/claim extraction, duplicate detection, related-content suggestions, and newsletter drafts. It must not independently publish sensitive reporting or replace source verification.
+## Pending provider decision and implementation
 
-## Required implementation controls
+User has not yet chosen an AI or email service. AWS SES/Bedrock were offered as an option but are not assumed approved. No AI credential is requested in chat, no service is activated and no inference charges are incurred by this milestone.
 
-- Central prompt registry with versioned prompt IDs and approval ownership.
-- Provider abstraction so models/providers are replaceable and their capabilities/costs are configured.
-- Immutable generation records: prompt ID, provider, model, sanitized input/output references, user/editor, timestamps, duration, tokens, cost, and outcome.
-- Data minimization: do not send secrets, payment data, unnecessary personal data, or unpublished sensitive source details to providers.
-- Sensitive-content classifier/gate for politics, crime, death, medical, legal, finance, allegations, communal/religious matters, and emergencies.
-- Human review required for all sensitive output and for every transition to publish.
-- Citation/source and claim review UI; model output must never be treated as evidence.
-- Test fixtures for Tamil language quality, hallucination resistance, named entities, numbers, and editorial policy adherence.
-
-## Editorial policy baseline
-
-All AI functions must enforce the supplied principle: do not invent facts, quotations, sources, statistics, names, dates, numbers, locations, or organizations; distinguish facts, allegations, claims, opinions, and unverified information; use original natural Tamil; flag insufficient information for verification.
+Remaining: an approved live provider adapter and model, provider-specific secret configuration, measured monetary cost reporting, and Tamil newsroom quality evaluation against real model output. Request/token limits are not a monetary spending cap. AI proposals must never bypass the existing independent fact-check and publishing workflow. Email stays on hold at the user's request.

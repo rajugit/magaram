@@ -194,4 +194,48 @@ export class PrismaIdentityRepository implements IdentityRepository {
       },
     });
   }
+
+  async changePassword(input: {
+    userId: string;
+    previousHash: string;
+    passwordHash: string;
+    requestId?: string;
+  }): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      const now = new Date();
+      const changed = await tx.user.updateMany({
+        where: {
+          id: input.userId,
+          passwordHash: input.previousHash,
+          status: 'ACTIVE',
+          deletedAt: null,
+        },
+        data: {
+          passwordHash: input.passwordHash,
+          passwordChangedAt: now,
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        },
+      });
+      if (!changed.count) return false;
+      await tx.session.updateMany({
+        where: { userId: input.userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+      await tx.passwordReset.updateMany({
+        where: { userId: input.userId, usedAt: null },
+        data: { usedAt: now },
+      });
+      await tx.auditLog.create({
+        data: {
+          action: 'auth.password.changed',
+          actorId: input.userId,
+          entityId: input.userId,
+          entityType: 'User',
+          requestId: input.requestId,
+        },
+      });
+      return true;
+    });
+  }
 }

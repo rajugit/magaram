@@ -2,7 +2,11 @@
 
 ## Current assessment
 
-Phase 1 adds Vitest/Supertest API regression tests and workspace lint, typecheck, format, schema-validation, and build commands. The six passing API tests cover safe health/version output, CSRF-protected sessions/logout, RBAC/error responses, super-administrator access, lockout, and a password-reset flow using an injected delivery adapter. Coverage reporting is configured but was not run as a release gate; no CI workflow is added until the approved CI/CD phase.
+As of 2026-09-17, 32 API/unit tests and 10 isolated MySQL/Redis integration tests pass. Lint, type checks (including tests), all three application builds, and production dependency audit pass. Browser previews for Phases 1–3 were inspected; this is not full browser end-to-end or accessibility acceptance. Coverage reporting is configured but was not run as a release gate. AI workflow integration uses a no-network test fixture, not a live provider or evidence of real-model Tamil quality.
+
+Run `pnpm test` for API/unit tests. Run `pnpm test:integration` with the dedicated local MySQL/Redis containers running. The integration runner rejects non-local/non-preview database URLs, creates a random test schema, applies migrations, runs fixtures, and removes only its own schema and grant. Redis tests use the same unique test name and remove only their own queue. Never point these tests at AWS or a shared production database. HTTP tests need local listening-port permission.
+
+After a fresh install, run `pnpm --filter @magaram/api build` before workspace typechecking: the worker consumes the API package’s built maintenance-service declarations. `pnpm build` orders these workspace dependencies automatically.
 
 ## Quality gates by phase
 

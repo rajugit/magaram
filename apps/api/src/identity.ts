@@ -56,6 +56,12 @@ export interface IdentityRepository extends AuditRecorder {
   createPasswordReset(input: { userId: string; tokenHash: string; expiresAt: Date }): Promise<void>;
   findPasswordResetByTokenHash(tokenHash: string): Promise<StoredPasswordReset | null>;
   consumePasswordReset(input: { resetId: string; passwordHash: string }): Promise<boolean>;
+  changePassword(input: {
+    userId: string;
+    previousHash: string;
+    passwordHash: string;
+    requestId?: string;
+  }): Promise<boolean>;
 }
 
 export class PasswordService {
@@ -66,6 +72,7 @@ export class PasswordService {
   }
 
   async verify(password: string, hash: string): Promise<boolean> {
+    if (Buffer.byteLength(password, 'utf8') > 72) return false;
     return bcrypt.compare(password, hash);
   }
 }
@@ -90,6 +97,8 @@ export class TokenService {
 }
 
 export class AuthService {
+  // A fixed bcrypt work factor for unknown accounts prevents the cheap account-enumeration path.
+  private readonly dummyHash = bcrypt.hashSync('not-an-account-password', 12);
   constructor(
     private readonly repository: IdentityRepository,
     private readonly passwords: PasswordService,
@@ -103,7 +112,10 @@ export class AuthService {
     requestId?: string,
   ): Promise<{ user: AuthenticatedUser; token: string }> {
     const user = await this.repository.findUserByEmail(email.toLowerCase());
-    const passwordMatches = user ? await this.passwords.verify(password, user.passwordHash) : false;
+    const passwordMatches = await this.passwords.verify(
+      password,
+      user?.passwordHash ?? this.dummyHash,
+    );
 
     const temporarilyLocked = user?.lockedUntil && user.lockedUntil > new Date();
     if (!user || !passwordMatches || user.status !== 'ACTIVE' || temporarilyLocked) {
@@ -197,6 +209,42 @@ export class AuthService {
       actorId: user.id,
       requestId,
     });
+  }
+
+  async changePassword(
+    user: AuthenticatedUser,
+    currentPassword: string,
+    password: string,
+    requestId?: string,
+  ) {
+    const stored = await this.repository.findUserByEmail(user.email);
+    if (
+      !stored ||
+      stored.status !== 'ACTIVE' ||
+      (stored.lockedUntil && stored.lockedUntil > new Date()) ||
+      !(await this.passwords.verify(currentPassword, stored.passwordHash))
+    ) {
+      if (
+        stored &&
+        stored.status === 'ACTIVE' &&
+        (!stored.lockedUntil || stored.lockedUntil <= new Date())
+      )
+        await this.repository.recordFailedLogin(stored.id);
+      throw new ApiError(
+        403,
+        'INVALID_CREDENTIALS',
+        'Current password is incorrect or the account is temporarily locked.',
+      );
+    }
+    if (await this.passwords.verify(password, stored.passwordHash))
+      throw new ApiError(422, 'PASSWORD_UNCHANGED', 'Choose a different password.');
+    const changed = await this.repository.changePassword({
+      userId: stored.id,
+      previousHash: stored.passwordHash,
+      passwordHash: await this.passwords.hash(password),
+      requestId,
+    });
+    if (!changed) throw new ApiError(409, 'PASSWORD_CHANGED', 'Account changed. Sign in again.');
   }
 
   async completePasswordReset(token: string, password: string, requestId?: string): Promise<void> {

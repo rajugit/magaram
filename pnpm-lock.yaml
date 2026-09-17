@@ -126,6 +126,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@magaram/api':
+        specifier: workspace:*
+        version: link:../api
       bullmq:
         specifier: ^5.58.5
         version: 5.81.5
