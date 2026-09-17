@@ -8,6 +8,7 @@ type AiStatus = {
   generationEnabled: boolean;
   provider: string | null;
   model: string | null;
+  emailEnabled: boolean;
   message: string;
   usage: { userRequests: number; globalRequests: number };
   limits: { dailyPerUser: number; dailyGlobal: number; maxOutputTokens: number } | null;
@@ -113,7 +114,7 @@ export function AiWorkbench({ articles, demo }: { articles: Article[]; demo: boo
       <p className="notice">
         {status?.message ||
           'AI generation is inactive. No provider is connected and no reporting leaves this system.'}{' '}
-        Email is on hold.
+        {!status?.emailEnabled && 'Email is on hold.'}
       </p>
       {!demo && status && (
         <p className="fineprint">

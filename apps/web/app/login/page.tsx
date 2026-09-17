@@ -80,6 +80,9 @@ export default function Login() {
               <Icon name="arrow" />
             </button>
           </form>
+          <Link href="/reset-password" className="back-link">
+            Forgot your password?
+          </Link>
           <div className="divider">or explore the design</div>
           <button
             className="button secondary full"

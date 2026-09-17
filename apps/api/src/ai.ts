@@ -16,6 +16,7 @@ export function aiRouter(
   csrf: RequestHandler,
   provider?: AiProvider,
   limits?: AiLimits,
+  emailEnabled = false,
 ): Router {
   const router = Router();
   const service = new AiService(db, provider, limits);
@@ -37,10 +38,10 @@ export function aiRouter(
         userRequests: usage.find((row) => row.scope === req.auth!.id)?.requests || 0,
         globalRequests: usage.find((row) => row.scope === 'global')?.requests || 0,
       },
-      emailEnabled: false,
+      emailEnabled,
       message: service.enabled
         ? 'Generation sends the selected reporting to the configured AI provider only after your confirmation. Independent review is required.'
-        : 'No AI provider is connected. Local prompt preparation and duplicate checking remain available. Email is on hold.',
+        : `No AI provider is connected. Local prompt preparation and duplicate checking remain available.${emailEnabled ? ' Amazon SES password-reset delivery is enabled.' : ' Email is on hold.'}`,
     });
   });
   router.post('/ai/prepare', csrf, async (req, res) => {

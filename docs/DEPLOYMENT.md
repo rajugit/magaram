@@ -13,6 +13,7 @@ Preview: <https://65.2.18.204/preview/2>. Live login: <https://65.2.18.204/login
 - MySQL, Redis, API and web ports are loopback-only. Only HTTPS/HTTP are public; SSH is restricted to the deployment operator's address.
 - One image is built from the committed release, with independent web/API containers and resource limits. No placeholder queue consumer runs.
 - Secrets are generated on-server under root-only `/etc/magaram/`, never in Git, image layers, user-data or deployment output. The admin bootstrap password is isolated in `/etc/magaram/bootstrap.env` and must only be viewed in the owner's own secure terminal.
+- Amazon runtime credentials, when enabled, live only in root-owned `/etc/magaram/aws.env` and are mounted into the API container alone. The key is restricted to the APAC Nova Micro inference profile and SES sends from `magaram.in@gmail.com`; it is not stored in Git, the image or the web/worker containers.
 
 ## Releasing
 
@@ -43,7 +44,7 @@ References: [Lightsail pricing](https://aws.amazon.com/lightsail/pricing/) and [
 
 ## Owner-only administrator access
 
-The 2026-09-17 release candidate adds a 384 MB-limited maintenance worker to the existing server, without provisioning another AWS resource, and an additive migration for AI proposal history and quotas. Run the full build, API tests, isolated integration suite and targeted secret scan, then deploy an exact reviewed commit. The release script makes a database backup before building, applies migrations, and registers default Tamil categories/locations without resetting accounts. Verify the worker is running and recurring maintenance completes after deployment; API readiness alone does not prove worker health. The API APP_VERSION reports the deployed commit. DNS is deliberately unchanged; email and live AI generation stay inactive.
+The Amazon-integration release adds an official Bedrock Converse adapter, a secure Amazon SES password-reset delivery adapter and a reset page. It starts disabled until the root-only runtime configuration explicitly enables it. The initial Bedrock caps are 10 requests per user and 50 platform-wide per UTC day, with 12,000 input characters, 1,200 output tokens and a 30-second timeout. DNS is deliberately unchanged. Enable SES only after the sender verification completes; SES sandbox restrictions still apply to recipients.
 
 Administrator email: `magaram.in@gmail.com`. To retrieve the generated password, run the following yourself in your own Terminal from the repository, with the `magaram` AWS profile configured. Do not ask an assistant to run this password-display command or paste its output into chat:
 

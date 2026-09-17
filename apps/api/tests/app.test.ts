@@ -123,6 +123,15 @@ const config: AppConfig = {
   TRUST_PROXY: false,
   RATE_LIMIT_WINDOW_MS: 60_000,
   RATE_LIMIT_MAX: 120,
+  AWS_REGION: 'ap-south-1',
+  AI_PROVIDER: 'inactive',
+  AWS_BEDROCK_MODEL_ID: 'apac.amazon.nova-micro-v1:0',
+  AI_DAILY_PER_USER: 10,
+  AI_DAILY_GLOBAL: 50,
+  AI_MAX_INPUT_CHARS: 12000,
+  AI_MAX_OUTPUT_TOKENS: 1200,
+  AI_TIMEOUT_MS: 30000,
+  EMAIL_PROVIDER: 'inactive',
 };
 
 describe('foundation API', () => {

@@ -326,6 +326,7 @@ export function createApp(dependencies: AppDependencies): Express {
         csrfProtection(tokens),
         dependencies.aiProvider,
         dependencies.aiLimits,
+        config.EMAIL_PROVIDER === 'ses',
       ),
     );
   app.get('/api/v1/me', requireAuthentication(), (request, response) =>

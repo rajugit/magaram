@@ -12,6 +12,8 @@ const env = Object.fromEntries(
 );
 const runtime = readFileSync('/etc/magaram/runtime.env', 'utf8');
 const origin = runtime.match(/^WEB_ORIGIN=(.+)$/m)?.[1];
+const expectedAi = /^AI_PROVIDER=bedrock$/m.test(runtime);
+const expectedEmail = /^EMAIL_PROVIDER=ses$/m.test(runtime);
 assert(origin?.startsWith('https://'));
 const check = async (path, expected, options = {}) => {
   const response = await fetch(origin + path, { ...options, signal: AbortSignal.timeout(15000) });
@@ -45,9 +47,9 @@ headers.Cookie += '; ' + sessionCookie.split(';')[0];
 await check('/api/v1/me', 200, { headers });
 await check('/api/v1/articles', 200, { headers });
 const aiStatus = (await (await check('/api/v1/ai/status', 200, { headers })).json()).data;
-assert.equal(aiStatus.generationEnabled, false, 'AI should be inactive for this release.');
-assert.equal(aiStatus.emailEnabled, false, 'Email should remain inactive.');
-await check('/api/v1/ai/generate', 503, { method: 'POST', headers, body: '{}' });
+assert.equal(aiStatus.generationEnabled, expectedAi, 'Unexpected AI generation state.');
+assert.equal(aiStatus.emailEnabled, expectedEmail, 'Unexpected email delivery state.');
+if (!expectedAi) await check('/api/v1/ai/generate', 503, { method: 'POST', headers, body: '{}' });
 await check('/api/v1/auth/logout', 200, { method: 'POST', headers });
 console.log(
   'Trusted TLS, secure session cookies, persisted authentication, authorization and logout passed.',

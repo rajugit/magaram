@@ -28,7 +28,9 @@ services:
     image: magaram:${RELEASE_TAG:?set RELEASE_TAG}
     restart: unless-stopped
     network_mode: host
-    env_file: /etc/magaram/runtime.env
+    env_file:
+      - /etc/magaram/runtime.env
+      - /etc/magaram/aws.env
     environment:
       APP_VERSION: ${RELEASE_TAG:?set RELEASE_TAG}
     working_dir: /app/apps/api
