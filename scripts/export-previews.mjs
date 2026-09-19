@@ -12,6 +12,7 @@ const pages = {
   '/preview/1': 'phase-1.html',
   '/preview/2': 'phase-2.html',
   '/preview/3': 'phase-3.html',
+  '/preview/4': 'phase-4.html',
   '/preview/2/articles': 'articles.html',
   '/preview/2/articles/new': 'editor.html',
   '/preview/2/articles/demo-4': 'review-story.html',
@@ -30,6 +31,13 @@ const links = {
   '/admin/media': 'media.html',
   '/admin/settings': 'settings.html',
   '/admin/articles/demo-4': 'review-story.html',
+  '/news': 'phase-4.html',
+  '/trust': 'phase-4.html',
+  '/preview/4/news': 'phase-4.html',
+  '/preview/4/trust': 'phase-4.html',
+  '/preview/4/news/chennai-neighbourhood': 'phase-4.html',
+  '/preview/4/news/local-business-guide': 'phase-4.html',
+  '/preview/4/news/reading-spaces': 'phase-4.html',
   ...pages,
 };
 for (const [route, filename] of Object.entries(pages)) {

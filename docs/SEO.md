@@ -2,7 +2,9 @@
 
 ## Current assessment
 
-No public site, routes, rendering strategy, metadata, robots policy, sitemap, RSS feed, structured data, or analytics implementation exists to evaluate.
+The Phase 4 core adds a Tamil-first public home, news index, published-article route and trust page. The live public routes read only the anonymous published-news projection; sample stories are confined to `/preview/4`. Canonical metadata, `robots.txt`, a static sitemap, Open Graph article metadata and sanitized JSON-LD are implemented. Public article routes are request-rendered so they can reflect editorial publication state without exposing newsroom records.
+
+RSS, news sitemaps, published-article sitemap entries, related-content relevance, author/category/location discovery routes, media/image delivery, analytics and production search acceptance remain pending.
 
 ## Phase 4–5 implementation plan
 

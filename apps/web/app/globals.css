@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './workspace.css';
+@import './public-site.css';
 
 :root {
   --magaram-orange: #ff9e32;
