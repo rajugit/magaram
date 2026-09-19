@@ -20,7 +20,7 @@ if ! test -f /etc/magaram/admin-initialized; then
 fi
 docker compose -f deploy/compose.yaml up -d api web worker
 for attempt in $(seq 1 30); do
-  if curl --fail --silent http://127.0.0.1:4000/ready >/dev/null && curl --fail --silent http://127.0.0.1:3000/preview/3 >/dev/null && test "$(docker inspect -f '{{.State.Running}}' magaram-worker-1)" = true; then
+  if curl --fail --silent http://127.0.0.1:4000/ready >/dev/null && curl --fail --silent http://127.0.0.1:3000/preview/3 >/dev/null && curl --fail --silent http://127.0.0.1:3000/preview/4 >/dev/null && test "$(docker inspect -f '{{.State.Running}}' magaram-worker-1)" = true; then
     ln -sfn "$PWD" /opt/magaram/current
     install -m 755 deploy/backup.sh /usr/local/sbin/magaram-backup
     install -m 644 deploy/magaram-backup.service /etc/systemd/system/magaram-backup.service
