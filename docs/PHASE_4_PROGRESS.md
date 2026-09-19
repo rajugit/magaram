@@ -1,6 +1,6 @@
 # Phase 4 — Public website
 
-Status: core public experience verified locally on 2026-09-19. Deployment and broader launch acceptance remain pending.
+Status: core public experience deployed and verified on 2026-09-19. Broader launch acceptance remains pending.
 
 ## Implemented
 
@@ -18,7 +18,6 @@ Status: core public experience verified locally on 2026-09-19. Deployment and br
 
 ## Remaining before phase acceptance
 
-- Deploy and smoke-test the public routes against the live published-news API.
 - Conduct mobile, keyboard, screen-reader and editorial acceptance testing with real independently approved stories.
 - Add published-article sitemap entries, a news sitemap, RSS and image delivery only after their live data and editorial requirements are ready.
 - Add related-content relevance, archive/category/location pages, public author profiles and a reviewed corrections submission process.

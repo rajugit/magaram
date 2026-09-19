@@ -12,7 +12,7 @@ Each phase requires working persisted workflows, authorization checks, validatio
 | 1 Foundation            | Core verified locally | Identity/RBAC, audited password changes, real MySQL/Redis jobs; email inactive          |
 | 2 CMS                   | In progress           | Draft → review → verified approval → publication; media and history                     |
 | 3 AI                    | Core workflow tested  | Saved proposals, independent review, quotas and local duplicates; live provider pending |
-| 4 Public website        | Core locally verified | Tamil-first public routes, published-only projection, trust pages and preview           |
+| 4 Public website        | Core deployed         | Tamil-first public routes, published-only projection, trust pages and preview           |
 | 5 SEO                   | Baseline built        | Canonicals, metadata, robots and static sitemap; feeds/news sitemap pending             |
 | 6 Social                | Pending               | Official providers, consent, durable delivery and retries                               |
 | 7 Local                 | Pending               | Business verification, offers and consented leads                                       |
