@@ -6,24 +6,24 @@ The user approved continuing through the full project on 2026-09-15 and requeste
 
 Each phase requires working persisted workflows, authorization checks, validation, tests appropriate to the risk, and a visible preview. Interfaces without configured providers must say unavailable, and demo content must be labelled. No phase is complete solely because its pages exist.
 
-| Phase                   | State                 | Preview / acceptance                                                                                                                                       |
-| ----------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 Audit                 | Complete              | Audit documents                                                                                                                                            |
-| 1 Foundation            | Core verified locally | Identity/RBAC, audited password changes, real MySQL/Redis jobs; email inactive                                                                             |
-| 2 CMS                   | In progress           | Draft → review → verified approval → publication; media and history                                                                                        |
-| 3 AI                    | Core workflow tested  | Saved proposals, independent review, quotas and local duplicates; live provider pending                                                                    |
-| 4 Public website        | Core deployed         | Tamil-first public routes, published-only projection, trust pages and preview                                                                              |
-| 5 SEO                   | In progress           | Canonicals, metadata, dynamic sitemap, RSS, news sitemap, filtered search, and category/location archives; accessibility and production acceptance pending |
-| 6 Social                | Contract foundation   | Provider-neutral validation and fail-closed inactive adapters; official providers, consent ledger, durable delivery and retries remain pending             |
-| 7 Local                 | Core verified locally | Audited verification, reviewed offers, Tamil directory and consented leads; `/preview/7`; release acceptance pending                                       |
-| 8 Advertising           | Pending               | Owned campaigns, approvals, server-verified billing                                                                                                        |
-| 9 Revenue expansion     | Pending               | Moderated jobs, classifieds, property, education, deals                                                                                                    |
-| 10 Audience             | Pending               | Membership, newsletter, subscription lifecycle                                                                                                             |
-| 11 Media business       | Pending               | Creators, services, events, intelligence, licensing                                                                                                        |
-| 12 Revenue intelligence | Pending               | Reconciled ledger and real metrics                                                                                                                         |
-| 13 AWS                  | Preview live          | Single-server HTTPS preview; production hardening still pending                                                                                            |
-| 14 CI/CD                | In progress           | CI checks, dependency audit, builds, isolated integration job, and archive/feed smoke checks added; release/rollback acceptance pending                    |
-| 15 Production readiness | Pending               | Integrated testing and provider verification                                                                                                               |
+| Phase                   | State                    | Preview / acceptance                                                                                                                                       |
+| ----------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 Audit                 | Complete                 | Audit documents                                                                                                                                            |
+| 1 Foundation            | Core verified locally    | Identity/RBAC, audited password changes, real MySQL/Redis jobs; email inactive                                                                             |
+| 2 CMS                   | In progress              | Draft → review → verified approval → publication; media and history                                                                                        |
+| 3 AI                    | Core workflow tested     | Saved proposals, independent review, quotas and local duplicates; live provider pending                                                                    |
+| 4 Public website        | Core deployed            | Tamil-first public routes, published-only projection, trust pages and preview                                                                              |
+| 5 SEO                   | In progress              | Canonicals, metadata, dynamic sitemap, RSS, news sitemap, filtered search, and category/location archives; accessibility and production acceptance pending |
+| 6 Social                | Contract foundation      | Provider-neutral validation and fail-closed inactive adapters; official providers, consent ledger, durable delivery and retries remain pending             |
+| 7 Local                 | Core deployed to preview | Audited verification, reviewed offers, Tamil directory and consented leads; `/preview/7`; local/live smoke passed; broader production acceptance pending   |
+| 8 Advertising           | Pending                  | Owned campaigns, approvals, server-verified billing                                                                                                        |
+| 9 Revenue expansion     | Pending                  | Moderated jobs, classifieds, property, education, deals                                                                                                    |
+| 10 Audience             | Pending                  | Membership, newsletter, subscription lifecycle                                                                                                             |
+| 11 Media business       | Pending                  | Creators, services, events, intelligence, licensing                                                                                                        |
+| 12 Revenue intelligence | Pending                  | Reconciled ledger and real metrics                                                                                                                         |
+| 13 AWS                  | Preview live             | Single-server HTTPS preview; production hardening still pending                                                                                            |
+| 14 CI/CD                | In progress              | CI checks, dependency audit, builds, isolated integration job, and archive/feed smoke checks added; release/rollback acceptance pending                    |
+| 15 Production readiness | Pending                  | Integrated testing and provider verification                                                                                                               |
 
 ## Current constraints
 
@@ -41,4 +41,4 @@ The low-cost AWS preview runs on a 4 GB Lightsail server in Mumbai at `https://m
 
 ### Phase 7 local milestone — 2026-09-24
 
-See `PHASE_7_PROGRESS.md` for delivered behavior, tests and remaining acceptance. Public directory: `/local`; staff workspace: `/admin/businesses`; labelled previews: `/preview/7` and `/preview/7/workspace`. The architecture and remaining phase sequence are recorded in `ARCHITECTURE_NEXT_STEPS.md`. This local milestone does not change the installed AWS release.
+See `PHASE_7_PROGRESS.md` for delivered behavior, tests and remaining acceptance. Public directory: `/local`; staff workspace: `/admin/businesses`; labelled previews: `/preview/7` and `/preview/7/workspace`. The architecture and remaining phase sequence are recorded in `ARCHITECTURE_NEXT_STEPS.md`. Deployed to the AWS preview on 2026-09-25 at `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`; backup, migrations and release health checks passed. Local smoke: 29 checks passed. Live testing-account login, secure cookies, permissions and logout passed. The public version proxy was corrected and authenticated live smoke passed with the exact commit. See `TEST_REPORT_2026-09-25.md`.

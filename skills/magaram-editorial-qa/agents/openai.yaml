@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Magaram Editorial QA'
+  short_description: 'Review Tamil news and editorial safeguards'
+  default_prompt: 'Use $magaram-editorial-qa to review this Magaram draft or public workflow for evidence, clear Tamil and editorial safeguards.'

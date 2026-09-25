@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Magaram Delivery'
+  short_description: 'Build, test and release Magaram Media phases'
+  default_prompt: 'Use $magaram-delivery to continue the next unfinished Magaram milestone and verify its local and live preview behavior.'

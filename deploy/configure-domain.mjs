@@ -43,7 +43,8 @@ location / {
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }
 location = /ready { proxy_pass http://127.0.0.1:4000/ready; }
-location = /health { proxy_pass http://127.0.0.1:4000/health; }`;
+location = /health { proxy_pass http://127.0.0.1:4000/health; }
+location = /version { proxy_pass http://127.0.0.1:4000/version; }`;
 
 writeFileSync(nginxPath, `server {
   listen 80 default_server;

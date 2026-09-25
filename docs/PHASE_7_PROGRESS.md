@@ -29,6 +29,6 @@ Consent is specific to responding to the named business enquiry; it does not sub
 
 ## Remaining release work
 
-This phase is implemented locally and is not yet deployed to the AWS preview. Apply the additive migration and seed permissions during the normal release. No sample businesses are seeded into the live directory.
+The core was deployed to the AWS preview on 2026-09-25 at `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`. The additive migrations and permission seeds succeeded; a pre-release backup completed. Local smoke checks and live testing-account authentication passed. Authenticated live smoke and exact public version verification passed; see `TEST_REPORT_2026-09-25.md`. No sample businesses are seeded into the live directory.
 
 Before production: complete signed-in browser acceptance, retention/withdrawal operations, monitoring and backup/restore acceptance. Management screens currently show the latest 200 businesses/enquiries; searchable paginated staff queues should precede a larger rollout. The current rate limiter is per process; a multi-instance deployment needs a shared rate-limit store. Business self-service, payments and outbound delivery are later integrations, not simulated features.

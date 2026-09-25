@@ -17,7 +17,8 @@ const tls=mode==='tls';
 const proxy=`location /api/v1/ { proxy_pass http://127.0.0.1:4000; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto https; proxy_set_header X-Forwarded-For $remote_addr; }
 location / { proxy_pass http://127.0.0.1:3000; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto https; proxy_set_header X-Forwarded-For $remote_addr; }
 location = /ready { proxy_pass http://127.0.0.1:4000/ready; }
-location = /health { proxy_pass http://127.0.0.1:4000/health; }`;
+location = /health { proxy_pass http://127.0.0.1:4000/health; }
+location = /version { proxy_pass http://127.0.0.1:4000/version; }`;
 save('/etc/nginx/sites-available/default',`server {
 listen 80 default_server;
 server_name ${ip};
