@@ -37,9 +37,11 @@ export default function Previews() {
                       ? 'Preparation built · provider pending'
                       : i === 4
                         ? 'Public experience preview'
-                        : i === 13
-                          ? 'AWS preview live'
-                          : 'Planned'}
+                        : i === 7
+                          ? 'Local workflow implemented'
+                          : i === 13
+                            ? 'AWS preview live'
+                            : 'Planned'}
             </span>
             <p>
               {i === 0
@@ -52,7 +54,9 @@ export default function Previews() {
                       ? 'Source-bound prompts, local preparation, audit trail and proposal validation. No live AI generation.'
                       : i === 4
                         ? 'Tamil-first public news pages, article reading, editorial trust information and responsive layouts.'
-                        : 'Implementation follows the preceding milestone. This phase is not complete yet.'}
+                        : i === 7
+                          ? 'Business verification, offer review and consented enquiries. Preview uses labelled sample data.'
+                          : 'Implementation follows the preceding milestone. This phase is not complete yet.'}
             </p>
             {i === 1 && (
               <Link className="button secondary" href="/preview/1">
@@ -67,6 +71,11 @@ export default function Previews() {
             {i === 3 && (
               <Link className="button secondary" href="/preview/3">
                 Preview AI safeguards <Icon name="arrow" size={16} />
+              </Link>
+            )}
+            {i === 7 && (
+              <Link className="button secondary" href="/preview/7">
+                Preview Magaram Local <Icon name="arrow" size={16} />
               </Link>
             )}
             {i === 4 && (

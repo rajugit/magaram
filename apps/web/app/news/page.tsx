@@ -14,12 +14,24 @@ export const metadata: Metadata = {
 export default async function NewsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; category?: string }>;
+  searchParams: Promise<{ page?: string; category?: string; location?: string; q?: string }>;
 }) {
-  const { page: pageInput, category: categoryInput } = await searchParams;
+  const {
+    page: pageInput,
+    category: categoryInput,
+    location: locationInput,
+    q: qInput,
+  } = await searchParams;
   const page = Math.max(1, Number.parseInt(pageInput || '1', 10) || 1);
   const category = categoryInput?.trim().slice(0, 100) || undefined;
+  const location = locationInput?.trim().slice(0, 100) || undefined;
+  const q = qInput?.trim().slice(0, 200) || undefined;
   return (
-    <NewsIndex news={await getPublicNews({ page, limit: 18, category })} category={category} />
+    <NewsIndex
+      news={await getPublicNews({ page, limit: 18, category, location, q })}
+      category={category}
+      location={location}
+      q={q}
+    />
   );
 }

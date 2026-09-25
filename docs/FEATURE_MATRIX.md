@@ -1,23 +1,24 @@
 # Feature Matrix
 
-All features below are missing because the audited workspace contains no application artifacts.
+This matrix reflects the current implementation and the acceptance state in `docs/DELIVERY_TRACKER.md`.
 
-| Capability                                        | Current state | Intended phase | Notes                                                 |
-| ------------------------------------------------- | ------------- | -------------- | ----------------------------------------------------- |
-| Editorial CMS                                     | Missing       | 2              | Includes review, sources, claims, corrections, media. |
-| AI newsroom                                       | Missing       | 3              | Human-governed Tamil assistance and audit records.    |
-| Fact checking                                     | Missing       | 2–3            | Must block sensitive auto-publication.                |
-| Sources / corrections                             | Missing       | 2              | Core trust requirements.                              |
-| Media                                             | Missing       | 2              | Secure upload and storage before broad publishing.    |
-| Public website                                    | Missing       | 4              | Tamil-first responsive routes.                        |
-| SEO                                               | Missing       | 5              | Metadata, schema, sitemap, RSS.                       |
-| Social / WhatsApp / Telegram                      | Missing       | 6              | Official APIs, consent, queues.                       |
-| Analytics                                         | Missing       | 8 / 12         | Privacy-conscious events and revenue reporting.       |
-| Advertising / advertiser CRM                      | Missing       | 8              | Campaigns, inventory, approvals, billing.             |
-| Business directory / leads                        | Missing       | 7              | Magaram Local.                                        |
-| Jobs / classifieds / property / education / deals | Missing       | 9              | Build shared marketplace primitives.                  |
-| Membership / newsletter                           | Missing       | 10             | Consent, subscriptions, delivery.                     |
-| Creators / studio / events / awards               | Missing       | 11             | Media-business expansion.                             |
-| B2B intelligence / API                            | Missing       | 11             | Rights-aware paid offerings.                          |
-| Revenue intelligence                              | Missing       | 12             | Use actual ledger and analytics only.                 |
-| AWS / CI/CD / security                            | Missing       | 13–15          | Production readiness is a final gate.                 |
+| Capability                                        | Current state                                   | Intended phase | Notes                                                                                                                  |
+| ------------------------------------------------- | ----------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Editorial CMS                                     | Core implemented and tested                     | 2              | Draft, review, verification, publication, sources, corrections, taxonomy and revisions.                                |
+| AI newsroom                                       | Core workflow tested                            | 3              | Saved proposals, independent review, local duplicate checks and quotas; live provider pending.                         |
+| Fact checking                                     | Implemented in editorial workflow               | 2–3            | Evidence and review records exist; broader acceptance remains.                                                         |
+| Sources / corrections                             | Implemented                                     | 2              | Source and correction records are persisted and audited.                                                               |
+| Media                                             | Implemented with validation and rights controls | 2              | Full processing/scanning and rights-management UI remain.                                                              |
+| Public website                                    | Core deployed                                   | 4              | Published-only projection, Tamil-first routes, trust pages and preview.                                                |
+| SEO                                               | Baseline implemented                            | 5              | Metadata, canonical URLs, dynamic sitemap, RSS, Google News sitemap and filtered discovery.                            |
+| Social / WhatsApp / Telegram                      | Pending                                         | 6              | Requires official providers, consent, durable delivery and retries.                                                    |
+| Business directory / leads                        | Core implemented and locally tested             | 7              | Verified directory, reviewed offers, staff workflow and consented enquiries; release acceptance pending.               |
+| Advertising / advertiser CRM                      | Pending                                         | 8              | Campaigns, approvals, inventory and server-verified billing are not implemented.                                       |
+| Jobs / classifieds / property / education / deals | Pending                                         | 9              | Shared marketplace primitives are not implemented.                                                                     |
+| Membership / newsletter                           | Pending                                         | 10             | Consent, subscriptions and delivery are not implemented.                                                               |
+| Creators / studio / events / awards               | Pending                                         | 11             | Media-business expansion is not implemented.                                                                           |
+| B2B intelligence / API                            | Pending                                         | 11             | Rights-aware paid offerings are not implemented.                                                                       |
+| Revenue intelligence                              | Pending                                         | 12             | Reconciled ledger and revenue metrics are not implemented.                                                             |
+| AWS preview                                       | Preview live                                    | 13             | HTTPS single-server preview is operational; production hardening remains.                                              |
+| CI/CD                                             | In progress                                     | 14             | CI quality, dependency audit, builds and isolated integration job are configured; release/rollback acceptance remains. |
+| Production readiness                              | Pending                                         | 15             | Requires provider verification, restore rehearsal, security/load/browser acceptance and explicit cutover approval.     |

@@ -14,6 +14,7 @@ export function publicationReady(article: {
   approvedAt: Date | null;
   sources: { verified: boolean }[];
   claims: { status: string }[];
+  image?: { rightsStatus: string } | null;
 }) {
   return Boolean(
     article.approvedBy &&
@@ -21,7 +22,8 @@ export function publicationReady(article: {
     article.approvedAt &&
     article.sources.length &&
     article.sources.every((source) => source.verified) &&
-    article.claims.every((claim) => claim.status === 'VERIFIED'),
+    article.claims.every((claim) => claim.status === 'VERIFIED') &&
+    (!article.image || article.image.rightsStatus === 'CLEARED'),
   );
 }
 
@@ -52,7 +54,7 @@ export async function publishScheduledArticles(db: PrismaClient, now = new Date(
     const outcome = await db.$transaction(async (tx) => {
       const article = await tx.article.findUnique({
         where: { id },
-        include: { sources: true, claims: true },
+        include: { sources: true, claims: true, image: true },
       });
       if (
         !article ||

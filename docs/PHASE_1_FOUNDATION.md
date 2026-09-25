@@ -12,11 +12,11 @@ Status: core implementation verified locally on 2026-09-16. Release verification
 - Real non-secret settings and audit reads. Administrator settings no longer depend on newsroom permissions. Account security is available to signed-in users at /admin/account.
 - Hourly retention job removes sessions/reset records invalidated more than seven days ago; it never removes active credentials or audit history.
 - Recurring BullMQ jobs are idempotently registered, retry failures with backoff and retain bounded job history. The worker now performs database operations instead of acknowledging a no-op.
-- Both existing migrations are already applied locally and on the AWS preview. No new migration is needed for this milestone.
+- Identity, editorial, AI, and media-rights migrations are tracked in Prisma. Local/preview application of the newest migration and production restore rehearsal remain deployment gates.
 
 ## Acceptance evidence
 
-The current release suite has 32 API/unit tests and 10 isolated MySQL/Redis integration tests, covering fresh migrations, real queue execution/retries/scheduler deduplication, identity cleanup, password changes, taxonomy, media privacy, authorship, the persisted editorial workflow and AI proposal safeguards. Test schemas and queue keys are removed after each run; real users/content are not modified. Lint, type checks (including tests), and API/web/worker builds pass.
+The current local suite has 38 API/unit/domain tests and 11 isolated MySQL/Redis integration tests passing. The integration suite applies all five migrations and covers fresh migrations, queue execution/retries/scheduler deduplication, identity cleanup, password changes, taxonomy, media privacy, authorship, the persisted editorial workflow, media-rights fields, and AI proposal safeguards, and social-consent authorization/revocation. Test schemas and queue keys are removed after each run; real users/content are not modified. Lint, type checks (including tests), Prisma validation, and API/web/worker builds pass.
 
 Preview: /preview/1 for sign-in, /admin/account for signed-in account security, /preview/2/settings for an inactive sample form.
 

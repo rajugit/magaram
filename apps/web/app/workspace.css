@@ -840,6 +840,38 @@ input::placeholder,
 textarea::placeholder {
   color: #96806b;
 }
+.revision-comparison {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e6ddd3;
+}
+.revision-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.revision-comparison-grid article {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e6ddd3;
+  background: #fffdfa;
+}
+.revision-comparison-grid h5 {
+  margin: 0 0 0.5rem;
+}
+.revision-comparison-grid pre {
+  max-height: 24rem;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+@media (max-width: 720px) {
+  .revision-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .checkbox {
   display: flex;
   gap: 8px;
@@ -1248,4 +1280,38 @@ textarea::placeholder {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+.local-workbench {
+  display: grid;
+  gap: 24px;
+}
+.local-workbench .panel {
+  margin-bottom: 20px;
+}
+.local-workbench fieldset {
+  display: grid;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.local-workbench .local-form {
+  display: grid;
+  gap: 16px;
+  margin-block: 16px;
+}
+.local-workbench .local-offer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.local-workbench .local-enquiry {
+  padding-block: 16px;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
 }

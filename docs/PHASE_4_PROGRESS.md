@@ -6,7 +6,7 @@ Status: core public experience deployed and verified on 2026-09-19. Broader laun
 
 - Tamil-first, responsive public home page, news index, individual article route and trust page.
 - The server-rendered public experience reads only the existing anonymous `/api/v1/news` projection. It therefore excludes drafts, scheduled stories, demo records, reviewer identities, source evidence, claims, revisions and other newsroom-only information.
-- The public home is intentionally empty until an independently approved, non-demo article is published. It never substitutes a sample story on the live route.
+- The public home is intentionally empty until an independently approved, non-demo article is published. It never substitutes a sample story on the live route. Category and location archive links use the published-only projection.
 - `/preview/4` is a separate labelled design preview using sample articles. Its home, article, news and trust links stay within the preview route.
 - Accessible landmarks, skip link, descriptive navigation, focus treatment, responsive layouts, date markup and readable color contrast are included.
 - Public article pages render plain text paragraphs rather than editorial HTML, show sponsorship disclosure, and show public correction notes when present.
@@ -19,5 +19,5 @@ Status: core public experience deployed and verified on 2026-09-19. Broader laun
 ## Remaining before phase acceptance
 
 - Conduct mobile, keyboard, screen-reader and editorial acceptance testing with real independently approved stories.
-- Add published-article sitemap entries, a news sitemap, RSS and image delivery only after their live data and editorial requirements are ready.
+- Add image delivery only after its live data and editorial requirements are ready; published-article sitemap entries, a news sitemap, and RSS are now generated from published data.
 - Add related-content relevance, archive/category/location pages, public author profiles and a reviewed corrections submission process.

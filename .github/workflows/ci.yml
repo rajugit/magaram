@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @magaram/api db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run API unit tests
+        run: pnpm test
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+
+      - name: Build all applications
+        run: pnpm build
+
+  integration:
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @magaram/api db:generate
+
+      - name: Start isolated infrastructure
+        run: pnpm setup:local && pnpm infra:up
+
+      - name: Wait for MySQL
+        run: |
+          for attempt in $(seq 1 30); do
+            if docker exec magaram-preview-mysql mysqladmin ping -h localhost --silent; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Apply base migrations
+        run: pnpm db:deploy
+
+      - name: Run isolated integration tests
+        run: pnpm test:integration
+
+      - name: Remove isolated infrastructure
+        if: always()
+        run: docker rm -f magaram-preview-mysql magaram-preview-redis || true

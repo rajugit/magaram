@@ -1,8 +1,9 @@
 import { PublicHome } from './_components/public-site';
-import { getPublicNews } from './_lib/public-data';
+import { getPublicDiscovery, getPublicNews } from './_lib/public-data';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  return <PublicHome news={await getPublicNews({ limit: 7 })} />;
+  const [news, discovery] = await Promise.all([getPublicNews({ limit: 7 }), getPublicDiscovery()]);
+  return <PublicHome news={news} locations={discovery?.locations || []} />;
 }

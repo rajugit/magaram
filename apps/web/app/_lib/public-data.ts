@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import type { PublicBusiness } from './local-data';
 
 export const siteUrl = 'https://magarammedia.in';
 
@@ -53,6 +54,8 @@ export const getPublicNews = cache(
       page?: number;
       limit?: number;
       category?: string;
+      location?: string;
+      q?: string;
     } = {},
   ): Promise<PublicNewsPage> => {
     const query = new URLSearchParams({
@@ -60,6 +63,8 @@ export const getPublicNews = cache(
       limit: String(input.limit || 20),
     });
     if (input.category) query.set('category', input.category);
+    if (input.location) query.set('location', input.location);
+    if (input.q) query.set('q', input.q);
     return (
       (await publicRequest<PublicNewsPage>(`/news?${query.toString()}`)) || {
         items: [],
@@ -70,6 +75,10 @@ export const getPublicNews = cache(
     );
   },
 );
+
+export const getPublicDiscovery = cache(async () => {
+  return publicRequest<{ categories: string[]; locations: string[] }>('/news/discovery');
+});
 
 export const getPublicArticle = cache(async (slug: string): Promise<PublicArticle | null> =>
   publicRequest<PublicArticle>(`/news/${encodeURIComponent(slug)}`),
@@ -84,4 +93,13 @@ export function formatPublishedDate(value: string | null | undefined) {
 
 export function escapeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+export async function getPublicBusinesses(query: URLSearchParams) {
+  return publicRequest<{
+    items: PublicBusiness[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`/local/businesses?${query.toString()}`);
 }

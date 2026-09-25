@@ -2,7 +2,7 @@
 
 ## Current assessment
 
-As of 2026-09-17, 32 API/unit tests and 10 isolated MySQL/Redis integration tests pass. Lint, type checks (including tests), all three application builds, and production dependency audit pass. Browser previews for Phases 1–3 were inspected; this is not full browser end-to-end or accessibility acceptance. Coverage reporting is configured but was not run as a release gate. AI workflow integration uses a no-network test fixture, not a live provider or evidence of real-model Tamil quality.
+The current local suite has 38 API/unit/domain tests and 11 isolated MySQL/Redis integration tests passing. The integration runner applies all five migrations, exercises the editorial/media-rights, AI, and social-consent workflows, and removes its disposable schema and queue fixtures. Lint, type checks (including tests), all three application builds, and Prisma schema validation pass. The 11 regenerated offline previews were inspected for Tamil document language, skip navigation, a main landmark, a page heading, and explicit sample labeling where applicable; this is not full browser end-to-end or accessibility acceptance. Coverage reporting is configured but was not run as a release gate. AI workflow integration uses a no-network test fixture, not a live provider or evidence of real-model Tamil quality.
 
 Run `pnpm test` for API/unit tests. Run `pnpm test:integration` with the dedicated local MySQL/Redis containers running. The integration runner rejects non-local/non-preview database URLs, creates a random test schema, applies migrations, runs fixtures, and removes only its own schema and grant. Redis tests use the same unique test name and remove only their own queue. Never point these tests at AWS or a shared production database. HTTP tests need local listening-port permission.
 
@@ -29,3 +29,5 @@ After a fresh install, run `pnpm --filter @magaram/api build` before workspace t
 - Accessibility, SEO, security, and performance checks in CI where reproducible.
 
 Critical tests must run before merge and deployment. Failures or warnings must remain visible; no phase may claim completion without recorded command results.
+
+The repository CI workflow runs lint, type checks, production dependency audit, builds, and API unit/domain tests. A dependent integration job creates the dedicated local MySQL/Redis containers, applies migrations, runs the isolated integration suite, and removes those containers even when the job fails.

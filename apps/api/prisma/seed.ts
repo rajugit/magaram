@@ -10,6 +10,7 @@ const permissions = [
   { code: 'articles:review', description: 'Review editorial content.' },
   { code: 'articles:fact-check', description: 'Record fact-check assessments.' },
   { code: 'social:manage', description: 'Manage social distribution configuration.' },
+  { code: 'local:manage', description: 'Manage verified local businesses, offers and leads.' },
   { code: 'sales:manage', description: 'Manage sales and advertiser records.' },
   { code: 'finance:read', description: 'View financial records.' },
   { code: 'analytics:read', description: 'View privacy-safe analytics.' },
@@ -22,7 +23,7 @@ const roles = [
   { code: 'REPORTER', name: 'Reporter', permissions: ['articles:draft'] },
   { code: 'FACT_CHECKER', name: 'Fact checker', permissions: ['articles:fact-check'] },
   { code: 'SOCIAL_MANAGER', name: 'Social manager', permissions: ['social:manage'] },
-  { code: 'SALES_MANAGER', name: 'Sales manager', permissions: ['sales:manage'] },
+  { code: 'SALES_MANAGER', name: 'Sales manager', permissions: ['sales:manage', 'local:manage'] },
   { code: 'ADVERTISER', name: 'Advertiser', permissions: [] },
   { code: 'BUSINESS_OWNER', name: 'Business owner', permissions: [] },
   { code: 'RECRUITER', name: 'Recruiter', permissions: [] },
@@ -67,6 +68,15 @@ async function seed() {
       create: { code: role.code, name: role.name },
     });
 
+    const desiredPermissionIds = role.permissions
+      .map((permissionCode) => permissionRecords.get(permissionCode)?.id)
+      .filter((id): id is string => Boolean(id));
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId: record.id,
+        ...(desiredPermissionIds.length ? { permissionId: { notIn: desiredPermissionIds } } : {}),
+      },
+    });
     for (const permissionCode of role.permissions) {
       const permission = permissionRecords.get(permissionCode);
       if (!permission) {

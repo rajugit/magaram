@@ -2,13 +2,14 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 import { Router, raw } from 'express';
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ApiError, sendSuccess } from './api-response.js';
 import { requireAuthentication, requirePermission } from './rbac.js';
 import type { AuthenticatedUser } from './identity.js';
 import { publicationReady } from './maintenance.js';
+import { inspectImage } from './media-validation.js';
 
 export const states = [
   'DRAFT',
@@ -87,6 +88,19 @@ const detail = {
   corrections: { orderBy: { createdAt: 'desc' as const } },
 };
 const published = ['PUBLISHED', 'UPDATED'] as const;
+const publicArticleWhere = (): Prisma.ArticleWhereInput => ({
+  status: { in: [...published] },
+  isDemo: false,
+  publishedAt: { lte: new Date() },
+});
+export const publicArticleIndexSelect = {
+  slug: true,
+  title: true,
+  category: true,
+  location: true,
+  publishedAt: true,
+  updatedAt: true,
+} satisfies Prisma.ArticleSelect;
 async function validateArticleReferences(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof articleSchema>,
@@ -165,6 +179,7 @@ export function guardTransition(
     authorId: string;
     sources: { verified: boolean }[];
     claims: { status: string }[];
+    image?: { rightsStatus: string } | null;
     approvedBy?: string | null;
     approvedAt?: Date | null;
   },
@@ -226,9 +241,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
   router.get('/news', async (req, res) => {
     const query = pagination.parse(req.query);
     const where: Prisma.ArticleWhereInput = {
-      status: { in: [...published] },
-      isDemo: false,
-      publishedAt: { lte: new Date() },
+      ...publicArticleWhere(),
       ...(query.category ? { category: query.category } : {}),
       ...(query.location ? { location: query.location } : {}),
       ...(query.q
@@ -247,13 +260,54 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     ]);
     sendSuccess(res, { items, total, page: query.page, limit: query.limit });
   });
+  router.get('/news/discovery', async (_req, res) => {
+    const where = publicArticleWhere();
+    const [categories, locations] = await Promise.all([
+      db.article.findMany({
+        where,
+        distinct: ['category'],
+        select: { category: true },
+        orderBy: { category: 'asc' },
+      }),
+      db.article.findMany({
+        where,
+        distinct: ['location'],
+        select: { location: true },
+        orderBy: { location: 'asc' },
+      }),
+    ]);
+    sendSuccess(res, {
+      categories: categories.map((item) => item.category),
+      locations: locations.map((item) => item.location),
+    });
+  });
+  router.get('/news/index', async (req, res) => {
+    const query = pagination.parse(req.query);
+    const where: Prisma.ArticleWhereInput = {
+      ...publicArticleWhere(),
+      ...(query.category ? { category: query.category } : {}),
+      ...(query.location ? { location: query.location } : {}),
+      ...(query.q
+        ? { OR: [{ title: { contains: query.q } }, { category: { contains: query.q } }] }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      db.article.findMany({
+        where,
+        select: publicArticleIndexSelect,
+        orderBy: { publishedAt: 'desc' },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+      db.article.count({ where }),
+    ]);
+    sendSuccess(res, { items, total, page: query.page, limit: query.limit });
+  });
   router.get('/news/:slug', async (req, res) => {
     const item = await db.article.findFirst({
       where: {
         slug: String(req.params.slug),
-        isDemo: false,
-        status: { in: [...published] },
-        publishedAt: { lte: new Date() },
+        ...publicArticleWhere(),
       },
       select: publicArticleSelect,
     });
@@ -776,6 +830,8 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
           'INVALID_MEDIA',
           'File signature does not match a supported image.',
         );
+      const kind = png ? 'png' : jpeg ? 'jpeg' : 'webp';
+      const inspection = inspectImage(bytes, kind);
       const alt = z
         .string()
         .min(3)
@@ -798,14 +854,79 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
             filename,
             mime: png ? 'image/png' : jpeg ? 'image/jpeg' : 'image/webp',
             size: bytes.length,
+            width: inspection.width,
+            height: inspection.height,
+            sha256: createHash('sha256').update(bytes).digest('hex'),
             alt,
             credit,
             ownerId: req.auth!.id,
+            rightsSource: req.header('x-media-rights-source') || null,
           },
         }),
       );
     },
   );
+  router.post('/media/:id/rights', requirePermission('articles:review'), csrf, async (req, res) => {
+    const data = z
+      .object({
+        status: z.enum(['CLEARED', 'REJECTED']),
+        source: z.string().trim().max(1000).nullable().default(null),
+      })
+      .superRefine((value, context) => {
+        if (value.status === 'CLEARED' && (!value.source || value.source.length < 3))
+          context.addIssue({
+            code: 'custom',
+            path: ['source'],
+            message: 'A rights source is required before clearing an image.',
+          });
+      })
+      .strict()
+      .parse(req.body);
+    const item = await db.$transaction(async (tx) => {
+      const asset = await tx.mediaAsset.findUnique({
+        where: { id: String(req.params.id) },
+        include: {
+          articles: {
+            where: {
+              status: { in: [...published] },
+              publishedAt: { lte: new Date() },
+              isDemo: false,
+            },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      });
+      if (!asset) throw new ApiError(404, 'NOT_FOUND', 'Image not found.');
+      if (asset.articles.length && data.status !== 'CLEARED')
+        throw new ApiError(
+          409,
+          'MEDIA_IN_USE',
+          'A published article uses this image. Keep its rights cleared or replace the image first.',
+        );
+      const updated = await tx.mediaAsset.update({
+        where: { id: asset.id },
+        data: {
+          rightsStatus: data.status,
+          rightsSource: data.source,
+          rightsReviewedBy: req.auth!.id,
+          rightsReviewedAt: new Date(),
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: req.auth!.id,
+          action: `media.rights.${data.status.toLowerCase()}`,
+          entityType: 'MediaAsset',
+          entityId: asset.id,
+          requestId: res.locals.requestId,
+          metadata: { status: data.status },
+        },
+      });
+      return updated;
+    });
+    sendSuccess(res, item);
+  });
   router.get('/media/:id/file', async (req, res) => {
     const asset = await db.mediaAsset.findUnique({
       where: { id: String(req.params.id) },
@@ -823,6 +944,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     });
     if (
       !asset ||
+      (asset.articles.length && asset.rightsStatus !== 'CLEARED') ||
       (!asset.articles.length &&
         (!req.auth ||
           (asset.ownerId !== req.auth.id &&

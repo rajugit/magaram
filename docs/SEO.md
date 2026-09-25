@@ -2,9 +2,9 @@
 
 ## Current assessment
 
-The Phase 4 core adds a Tamil-first public home, news index, published-article route and trust page. The live public routes read only the anonymous published-news projection; sample stories are confined to `/preview/4`. Canonical metadata, `robots.txt`, a static sitemap, Open Graph article metadata and sanitized JSON-LD are implemented. Public article routes are request-rendered so they can reflect editorial publication state without exposing newsroom records.
+The Phase 4 core adds a Tamil-first public home, news index, published-article route and trust page. The live public routes read only the anonymous published-news projection; sample stories are confined to `/preview/4`. Canonical metadata, `robots.txt`, dynamic published-article sitemap entries, RSS, Google News sitemap, Open Graph article metadata and sanitized JSON-LD are implemented. Public article routes are request-rendered so they can reflect editorial publication state without exposing newsroom records.
 
-RSS, news sitemaps, published-article sitemap entries, related-content relevance, author/category/location discovery routes, media/image delivery, analytics and production search acceptance remain pending.
+Related-content relevance, dedicated author pages, media/image delivery, analytics and production search acceptance remain pending. Dedicated category and location archive routes now use the published-only API projection, preserve search/pagination, and expose canonical metadata.
 
 ## Phase 4–5 implementation plan
 
@@ -13,7 +13,7 @@ RSS, news sitemaps, published-article sitemap entries, related-content relevance
 - Add validated JSON-LD for `Organization`, `WebSite`, `BreadcrumbList`, and `NewsArticle`/`Article` only where appropriate.
 - Generate `robots.txt`, `sitemap.xml`, `news-sitemap.xml`, and `rss.xml` from published, indexable content.
 - Use stable clean slugs; preserve redirects on future slug changes; prevent duplicate route variants and query canonicalization issues.
-- Implement pagination, internal links, related-content relevance, author/category/location pages, responsive images, and alt text.
+- Implement pagination, internal links, related-content relevance, author pages, responsive images, and alt text.
 - Exclude drafts, review states, private dashboards, user data, thin pages, and duplicates from indexing.
 - Measure Core Web Vitals and search performance without collecting unnecessary personal data.
 

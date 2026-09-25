@@ -13,7 +13,7 @@ Status: in progress; core workflow verified against isolated MySQL on 2026-09-16
 - UI supports multiple sources/claims, tags, independent evidence entry, local-time scheduling, correction notes and revision history. Existing media/SEO values survive draft edits. Editing a story outside the first list page loads it directly.
 - Registered taxonomy is enforced on draft saves; editors can add classifications with an audit record. Initial Tamil categories/locations are seeded additively, without renaming existing classifications.
 - Editors may reassign only the current draft to an active newsroom author. Reassignment clears verification and creates a revision/audit entry. Reporters cannot reassign authors or browse other reporters’ unpublished media.
-- The editor includes a permitted-media selector and SEO fields. Revision snapshots can be expanded to inspect previous title/body/status.
+- The editor includes a permitted-media selector and SEO fields. Uploaded media records bounded dimensions, a SHA-256 fingerprint, rights source/status/reviewer metadata, and a reviewer-only rights decision endpoint; uncleared media cannot be newly published and published media cannot be rejected in place. Revision snapshots can be expanded to inspect previous title/body/status.
 
 ## Evidence
 
@@ -21,4 +21,4 @@ Unit tests cover transitions, publication checks and public projection. The isol
 
 ## Remaining before full phase acceptance
 
-Complete media decoding/security and rights workflows, side-by-side revision comparison, broader permission-specific end-to-end UI tests, accessibility/mobile acceptance and editorial policy review. Sample forms are not evidence of live persistence. The core workflow is tested, but the whole CMS phase is not yet complete. Existing free-text classifications outside the seeded taxonomy must be registered by an editor before those drafts can be saved.
+Complete full image security scanning beyond bounded header inspection, broader permission-specific end-to-end UI tests, accessibility/mobile acceptance and editorial policy review. PNG, JPEG, VP8, VP8L and VP8X dimensions are now bounded and tested, and the live review UI now provides a read-only side-by-side revision comparison. Sample forms are not evidence of live persistence. The core workflow, dimension inspection, rights metadata and revision comparison are tested, but the whole CMS phase is not yet complete. Existing free-text classifications outside the seeded taxonomy must be registered by an editor before those drafts can be saved.

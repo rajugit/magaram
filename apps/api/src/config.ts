@@ -28,6 +28,18 @@ const environmentSchema = z
     PASSWORD_RESET_BASE_URL: z.string().url().max(500).optional(),
   })
   .superRefine((value, context) => {
+    if (value.NODE_ENV === 'production' && !value.WEB_ORIGIN.startsWith('https://'))
+      context.addIssue({
+        code: 'custom',
+        path: ['WEB_ORIGIN'],
+        message: 'Production web origins must use HTTPS.',
+      });
+    if (value.NODE_ENV === 'production' && !value.TRUST_PROXY)
+      context.addIssue({
+        code: 'custom',
+        path: ['TRUST_PROXY'],
+        message: 'Production must explicitly trust the configured TLS reverse proxy.',
+      });
     if (value.EMAIL_PROVIDER === 'ses' && !value.SES_FROM_EMAIL)
       context.addIssue({
         code: 'custom',

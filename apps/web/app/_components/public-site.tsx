@@ -45,6 +45,7 @@ export function PublicHeader({ pathPrefix = '' }: { pathPrefix?: string }) {
         <nav aria-label="முதன்மை வழிசெலுத்தல்" className="public-nav">
           <Link href={route(pathPrefix, '/news')}>செய்திகள்</Link>
           <Link href={route(pathPrefix, '/trust')}>நம்பிக்கை</Link>
+          <Link href="/local">உள்ளூர் நிறுவனங்கள்</Link>
           <Link className="public-login" href="/login">
             செய்தியகம்
           </Link>
@@ -107,10 +108,12 @@ function NoPublishedStories({ preview }: { preview?: boolean }) {
 
 export function PublicHome({
   news,
+  locations = [],
   preview = false,
   pathPrefix = '',
 }: {
   news: PublicNewsPage;
+  locations?: string[];
   preview?: boolean;
   pathPrefix?: string;
 }) {
@@ -214,13 +217,21 @@ export function PublicHome({
             <p className="section-kicker">தொடர்ந்து பாருங்கள்</p>
             <h2 id="discover-heading">உங்கள் ஊரிலிருந்து தொடங்கும் உரையாடல்கள்.</h2>
           </div>
-          <div className="category-links" aria-label="செய்தி வகைகள்">
+          <div className="category-links" aria-label="செய்தி வகைகள் மற்றும் இடங்கள்">
             {(categories.length ? categories : ['உள்ளூர்', 'வாழ்க்கை', 'கல்வி']).map((category) => (
               <Link
-                href={route(pathPrefix, `/news?category=${encodeURIComponent(category)}`)}
-                key={category}
+                href={route(pathPrefix, `/news/category/${encodeURIComponent(category)}`)}
+                key={`category-${category}`}
               >
                 {category}
+              </Link>
+            ))}
+            {locations.slice(0, 5).map((location) => (
+              <Link
+                href={route(pathPrefix, `/news/location/${encodeURIComponent(location)}`)}
+                key={`location-${location}`}
+              >
+                {location}
               </Link>
             ))}
           </div>
@@ -238,20 +249,53 @@ export function PublicHome({
 export function NewsIndex({
   news,
   category,
+  location,
+  q,
   pathPrefix = '',
+  basePath = '/news',
 }: {
   news: PublicNewsPage;
   category?: string;
+  location?: string;
+  q?: string;
   pathPrefix?: string;
+  basePath?: string;
 }) {
+  const query = new URLSearchParams();
+  if (category) query.set('category', category);
+  if (location) query.set('location', location);
+  if (q) query.set('q', q);
+  const queryString = query.toString();
   return (
     <div className="public-shell">
       <PublicHeader pathPrefix={pathPrefix} />
       <main id="content" className="public-main news-index">
         <header className="section-intro">
           <p className="section-kicker">செய்திகள்</p>
-          <h1>{category ? `${category} செய்திகள்` : 'சமீபத்திய செய்திகள்'}</h1>
+          <h1>
+            {category
+              ? `${category} செய்திகள்`
+              : location
+                ? `${location} செய்திகள்`
+                : 'சமீபத்திய செய்திகள்'}
+          </h1>
           <p>வெளியிடப்பட்ட செய்திகளும் கட்டுரைகளும் மட்டும் இங்கே காட்டப்படுகின்றன.</p>
+          <form method="get" className="news-filter" role="search" aria-label="செய்தி தேடல்">
+            {category && <input type="hidden" name="category" value={category} />}
+            {location && <input type="hidden" name="location" value={location} />}
+            <label htmlFor="news-query">செய்திகளைத் தேடுங்கள்</label>
+            <div>
+              <input
+                id="news-query"
+                name="q"
+                type="search"
+                defaultValue={q}
+                maxLength={200}
+                placeholder="தலைப்பு அல்லது வகை"
+              />
+              <button type="submit">தேடுங்கள்</button>
+            </div>
+          </form>
         </header>
         {news.items.length ? (
           <div className="story-grid story-grid-expanded">
@@ -267,7 +311,7 @@ export function NewsIndex({
             <Link
               href={route(
                 pathPrefix,
-                `/news?page=${news.page - 1}${category ? `&category=${encodeURIComponent(category)}` : ''}`,
+                `${basePath}?page=${news.page - 1}${queryString ? `&${queryString}` : ''}`,
               )}
             >
               ← முந்தையது
@@ -277,7 +321,7 @@ export function NewsIndex({
             <Link
               href={route(
                 pathPrefix,
-                `/news?page=${news.page + 1}${category ? `&category=${encodeURIComponent(category)}` : ''}`,
+                `${basePath}?page=${news.page + 1}${queryString ? `&${queryString}` : ''}`,
               )}
             >
               அடுத்தது →

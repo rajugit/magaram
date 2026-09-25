@@ -36,9 +36,9 @@ Run `sudo bash deploy/release.sh <full-commit-sha>` from the release directory. 
 
 Check `/health`, `/ready`, `/preview/2` and `/login` through `https://magarammedia.in`. Confirm unauthenticated API access is denied, secure-cookie login works, the certificate renewal dry run passes, and backup files exist. Never copy a credential or session cookie into the deployment report.
 
-The initial cloud smoke test passed readiness, preview rendering, unauthorized-access rejection, persisted administrator login, secure/HttpOnly cookies, authorized article-list access and logout. The first logical backup was generated and the TLS renewal dry run passed. `deploy/smoke.mjs` repeats the secret-safe server checks. Full restore rehearsal and editorial end-to-end acceptance remain outstanding.
+The initial cloud smoke test passed readiness, preview rendering, unauthorized-access rejection, persisted administrator login, secure/HttpOnly cookies, authorized article-list access and logout. The first logical backup was generated and the TLS renewal dry run passed. `deploy/smoke.mjs` repeats the secret-safe server checks, including public news, category/location archive, robots, sitemap and feed routes. Full restore rehearsal and editorial end-to-end acceptance remain outstanding.
 
-The dependency scan identified GHSA-ggr8-5vv4-36mx in Prisma's transitive `deepmerge-ts` dependency. The workspace pins the patched 8.0.0 version; Prisma generation, all 11 current tests, type checks and the production dependency audit pass with this override.
+The dependency scan identified GHSA-ggr8-5vv4-36mx in Prisma's transitive `deepmerge-ts` dependency. The workspace pins the patched 8.0.0 version; Prisma generation, the 38 API/unit tests and 11 isolated MySQL/Redis integration tests, type checks and the production dependency audit pass with this override.
 
 References: [Lightsail pricing](https://aws.amazon.com/lightsail/pricing/) and [IP certificate support](https://letsencrypt.org/2026/03/11/shorter-certs-certbot).
 

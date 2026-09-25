@@ -22,6 +22,8 @@ import { PrismaIdentityRepository } from './prisma-identity-repository.js';
 import { aiRouter } from './ai.js';
 import type { AiProvider, AiLimits } from './ai-service.js';
 import { requireAuthentication, requirePermission } from './rbac.js';
+import { socialRouter } from './social.js';
+import { localRouter } from './local.js';
 
 const SESSION_COOKIE = 'magaram_session';
 const CSRF_COOKIE = 'magaram_csrf';
@@ -109,10 +111,30 @@ function errorHandler(): ErrorRequestHandler {
       });
       return;
     }
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      ('status' in error || 'statusCode' in error) &&
+      (('status' in error && error.status === 413) ||
+        ('statusCode' in error && error.statusCode === 413))
+    ) {
+      sendError(response, 413, {
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'The request payload is too large.',
+      });
+      return;
+    }
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
       sendError(response, 409, {
         code: 'CONFLICT',
         message: 'A record with this value already exists.',
+      });
+      return;
+    }
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2034') {
+      sendError(response, 409, {
+        code: 'CONCURRENT_CHANGE',
+        message: 'This record changed during your request. Refresh and try again.',
       });
       return;
     }
@@ -386,6 +408,8 @@ export function createApp(dependencies: AppDependencies): Express {
     sendSuccess(response, { items, total, page, limit });
   });
   if (dependencies.db) app.use('/api/v1', editorialRouter(dependencies.db, csrfProtection(tokens)));
+  if (dependencies.db) app.use('/api/v1', socialRouter(dependencies.db, csrfProtection(tokens)));
+  if (dependencies.db) app.use('/api/v1', localRouter(dependencies.db, csrfProtection(tokens)));
 
   app.use((_request, _response, next) => {
     next(new ApiError(404, 'NOT_FOUND', 'The requested resource was not found.'));

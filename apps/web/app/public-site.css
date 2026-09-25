@@ -444,6 +444,41 @@
   font-size: 1.1rem;
   line-height: 1.8;
 }
+.news-filter {
+  max-width: 560px;
+  margin-top: 1.5rem;
+}
+.news-filter label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--magaram-ink);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.news-filter > div {
+  display: flex;
+  gap: 0.6rem;
+}
+.news-filter input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--magaram-border);
+  border-radius: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  background: #fffdfa;
+  color: var(--magaram-ink);
+  font: inherit;
+}
+.news-filter button {
+  border: 0;
+  border-radius: 0.55rem;
+  padding: 0.75rem 1rem;
+  background: var(--magaram-burgundy);
+  color: #fffdfa;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
 .story-grid-expanded {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -677,9 +712,20 @@
   .public-footer {
     width: min(100% - 1.4rem, 1180px);
   }
-  .public-nav > a:not(.public-login) {
-    display: none;
+  .public-header {
+    flex-wrap: wrap;
+    padding-block: 0.8rem;
   }
+  .public-nav {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+  .public-nav > a {
+    padding-block: 0.5rem;
+  }
+
   .public-hero h1,
   .section-intro h1 {
     font-size: 2.55rem;
@@ -701,9 +747,76 @@
     align-items: start;
     flex-direction: column;
   }
+  .news-filter > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .corrections-note li {
     align-items: start;
     flex-direction: column;
     gap: 0.25rem;
   }
+}
+
+.local-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.local-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+.local-form input:not([type='checkbox']),
+.local-form textarea {
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #a59a90;
+  border-radius: 0.3rem;
+  font: inherit;
+}
+.local-form button {
+  padding: 0.7rem;
+  cursor: pointer;
+}
+.local-form fieldset {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.local-form select {
+  max-width: 100%;
+  padding: 0.65rem;
+  font: inherit;
+}
+.local-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+.local-search label {
+  display: grid;
+  gap: 0.5rem;
+}
+.local-search input {
+  padding: 0.65rem;
+  max-width: 100%;
+  font: inherit;
+  border: 1px solid #a59a90;
+}
+.local-search button {
+  padding: 0.65rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.story-card h2 {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
 }

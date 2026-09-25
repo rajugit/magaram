@@ -2,7 +2,7 @@
 
 ## Current assessment
 
-No social integration, provider credential configuration, consent ledger, queue, publication status, delivery metric, or webhook handler exists.
+The provider-neutral publishing contract is implemented and tested. It requires an account reference, explicit consent ID, idempotency key, bounded copy, and sponsorship disclosure; inactive providers fail closed. No live social integration, provider credential configuration, consent ledger, queue, publication status, delivery metric, or webhook handler is operational yet.
 
 ## Target design
 

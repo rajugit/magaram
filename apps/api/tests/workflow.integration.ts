@@ -215,6 +215,26 @@ describe('persisted editorial and identity workflows', () => {
     expect(publicStory).not.toHaveProperty('claims');
     expect(publicStory).not.toHaveProperty('approvedBy');
     expect(JSON.stringify(publicStory)).not.toContain('Private verification');
+    const discovery = (await request(app).get('/api/v1/news/discovery').expect(200)).body.data;
+    expect(discovery.categories).toContain('test');
+    expect(discovery.locations).toContain('test');
+    const index = (await request(app).get('/api/v1/news/index').expect(200)).body.data;
+    expect(index.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: draft.slug, category: 'test', location: 'test' }),
+      ]),
+    );
+    expect(JSON.stringify(index)).not.toContain('Private verification');
+    const filteredIndex = (
+      await request(app).get(
+        '/api/v1/news/index?category=test&location=test&q=' + encodeURIComponent(draft.title),
+      )
+    ).body.data;
+    expect(filteredIndex.items).toEqual(
+      expect.arrayContaining([expect.objectContaining({ slug: draft.slug })]),
+    );
+    const excludedIndex = (await request(app).get('/api/v1/news/index?category=missing')).body.data;
+    expect(excludedIndex.items).toHaveLength(0);
     expect(await db.articleRevision.count({ where: { articleId: draft.id } })).toBe(version + 1);
     const prepared = await author.client
       .post('/api/v1/ai/prepare')
@@ -330,5 +350,198 @@ describe('persisted editorial and identity workflows', () => {
     expect(
       await db.auditLog.count({ where: { actorId: authorId, action: 'auth.password.changed' } }),
     ).toBe(1);
+  });
+  it('persists, authorizes and revokes hashed social consent', async () => {
+    const admin = await actor('editor');
+    const limited = await actor('limited');
+    const subjectHash = 'c'.repeat(64);
+    await limited.client
+      .post('/api/v1/social/consents')
+      .set('x-csrf-token', limited.csrf)
+      .send({
+        subjectHash,
+        channel: 'WHATSAPP',
+        purpose: 'news alerts',
+        source: 'website opt-in',
+      })
+      .expect(403);
+    await admin.client
+      .post('/api/v1/social/consents')
+      .send({ subjectHash, channel: 'WHATSAPP', purpose: 'news alerts', source: 'website opt-in' })
+      .expect(403);
+    const consent = (
+      await admin.client
+        .post('/api/v1/social/consents')
+        .set('x-csrf-token', admin.csrf)
+        .send({
+          subjectHash,
+          channel: 'WHATSAPP',
+          purpose: 'news alerts',
+          source: 'website opt-in',
+        })
+        .expect(200)
+    ).body.data;
+    const listed = (await admin.client.get('/api/v1/social/consents').expect(200)).body.data;
+    expect(listed).toEqual(expect.arrayContaining([expect.objectContaining({ id: consent.id })]));
+    await admin.client
+      .post(`/api/v1/social/consents/${consent.id}/revoke`)
+      .set('x-csrf-token', admin.csrf)
+      .expect(200);
+    const revoked = (await admin.client.get('/api/v1/social/consents').expect(200)).body.data.find(
+      (item: { id: string }) => item.id === consent.id,
+    );
+    expect(revoked.revokedAt).toBeTruthy();
+    expect(
+      await db.auditLog.count({
+        where: { entityType: 'SocialConsent', entityId: consent.id },
+      }),
+    ).toBe(2);
+  });
+});
+
+describe('local business workflow', () => {
+  it('protects management, records verification, gates offers and saves consented leads', async () => {
+    const { client, csrf } = await actor('editor');
+    const limited = await actor('limited');
+    await request(app).get('/api/v1/local/manage').expect(401);
+    await limited.client.get('/api/v1/local/leads').expect(403);
+    const post = (path: string, body: object) =>
+      client
+        .post('/api/v1/local' + path)
+        .set('x-csrf-token', csrf)
+        .send(body);
+    const business = (
+      await post('/businesses', {
+        name: 'Test shop',
+        slug: 'test-shop',
+        description: 'A local fixture business',
+        category: 'Retail',
+        location: 'Chennai',
+      }).expect(200)
+    ).body.data;
+    expect((await request(app).get('/api/v1/local/businesses')).body.data.items).toHaveLength(0);
+    await post(`/businesses/${business.id}/verify`, {}).expect(422);
+    await post(`/businesses/${business.id}/verify`, {
+      evidence: 'Registration checked against fixture record.',
+    }).expect(200);
+    expect(
+      await db.auditLog.count({
+        where: { entityId: business.id, action: 'local.business.verified' },
+      }),
+    ).toBe(1);
+    const createOffer = async (start: number, end: number) =>
+      (
+        await post(`/businesses/${business.id}/offers`, {
+          title: 'Fixture offer',
+          description: 'A clearly labelled fixture offer',
+          terms: 'Fixture terms, subject to stock availability.',
+          startsAt: new Date(Date.now() + start).toISOString(),
+          endsAt: new Date(Date.now() + end).toISOString(),
+        }).expect(200)
+      ).body.data;
+    const future = await createOffer(86400000, 172800000);
+    const current = await createOffer(-86400000, 86400000);
+    await post(`/offers/${future.id}/status`, { status: 'ACTIVE' }).expect(200);
+    await post(`/offers/${current.id}/status`, { status: 'ACTIVE' }).expect(200);
+    const listing = (await request(app).get('/api/v1/local/businesses')).body.data.items[0];
+    expect(listing.ownerId).toBeUndefined();
+    expect(listing.offers.map((offer: { id: string }) => offer.id)).toEqual([current.id]);
+    const lead = {
+      businessId: business.id,
+      name: 'Visitor',
+      email: 'visitor@example.test',
+      message: 'Please contact me',
+      consent: true,
+    };
+    await post('/leads', { ...lead, consent: false }).expect(422);
+    await post('/leads', { ...lead, offerId: future.id }).expect(404);
+    await request(app).post('/api/v1/local/leads').send(lead).expect(403);
+    const visitor = request.agent(app);
+    const visitorCsrf = (await visitor.get('/api/v1/auth/csrf')).body.data.token;
+    const saved = (
+      await visitor
+        .post('/api/v1/local/leads')
+        .set('x-csrf-token', visitorCsrf)
+        .send({ ...lead, offerId: current.id })
+        .expect(200)
+    ).body.data;
+    expect(Object.keys(saved).sort()).toEqual(['id', 'status']);
+    const consentAudit = await db.auditLog.findFirstOrThrow({
+      where: { entityId: saved.id, action: 'local.lead.consent' },
+    });
+    expect(consentAudit.metadata).toMatchObject({
+      consentVersion: 'local-enquiry-v1',
+      businessId: business.id,
+    });
+    expect(JSON.stringify(consentAudit.metadata)).not.toContain(lead.email);
+    await post(`/offers/${current.id}/status`, { status: 'UNKNOWN' }).expect(422);
+    const expired = await createOffer(-172800000, -86400000);
+    await post(`/offers/${expired.id}/status`, { status: 'ACTIVE' }).expect(409);
+    const otherBusiness = (
+      await post('/businesses', {
+        name: 'Other shop',
+        slug: 'other-shop',
+        description: 'Another fixture business',
+        category: 'Retail',
+        location: 'Madurai',
+      }).expect(200)
+    ).body.data;
+    await post(`/businesses/${otherBusiness.id}/verify`, {
+      evidence: 'Another registration fixture checked.',
+    }).expect(200);
+    await post('/leads', { ...lead, businessId: otherBusiness.id, offerId: current.id }).expect(
+      404,
+    );
+    const filtered = await request(app)
+      .get('/api/v1/local/businesses?location=Chennai&q=Test')
+      .expect(200);
+    expect(filtered.body.data.total).toBe(1);
+    await request(app).get('/api/v1/local/businesses?page=-1').expect(422);
+    await post(`/businesses/${otherBusiness.id}/suspend`, {
+      reason: 'End of second business fixture.',
+    }).expect(200);
+    expect(
+      (await db.localLead.findUniqueOrThrow({ where: { id: saved.id } })).consentAt,
+    ).toBeInstanceOf(Date);
+    await post(`/leads/${saved.id}/status`, { status: 'CONTACTED' }).expect(200);
+    await client
+      .put(`/api/v1/local/businesses/${business.id}`)
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'Updated shop',
+        slug: 'test-shop',
+        description: 'Updated local fixture business',
+        category: 'Retail',
+        location: 'Chennai',
+        website: 'javascript:alert(1)',
+      })
+      .expect(422);
+    await client
+      .put(`/api/v1/local/businesses/${business.id}`)
+      .set('x-csrf-token', csrf)
+      .send({
+        name: 'Updated shop',
+        slug: 'test-shop',
+        description: 'Updated local fixture business',
+        category: 'Retail',
+        location: 'Chennai',
+      })
+      .expect(200);
+    expect((await request(app).get('/api/v1/local/businesses')).body.data.items).toHaveLength(0);
+    expect((await db.localOffer.findUniqueOrThrow({ where: { id: current.id } })).status).toBe(
+      'PAUSED',
+    );
+    await post(`/offers/${current.id}/status`, { status: 'ACTIVE' }).expect(409);
+    await post(`/businesses/${business.id}/verify`, {
+      evidence: 'Updated business details checked again.',
+    }).expect(200);
+    await post(`/offers/${current.id}/status`, { status: 'ACTIVE' }).expect(200);
+
+    await post(`/businesses/${business.id}/suspend`, {
+      reason: 'Verification no longer valid.',
+    }).expect(200);
+    expect((await request(app).get('/api/v1/local/businesses')).body.data.items).toHaveLength(0);
+    await post('/leads', lead).expect(404);
+    await post(`/offers/${current.id}/status`, { status: 'ACTIVE' }).expect(409);
   });
 });

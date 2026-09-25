@@ -25,6 +25,7 @@ export function EditorialReview({
       snapshot: { title: string; body: string; status: string };
     }[]
   >([]);
+  const [comparisonId, setComparisonId] = useState<string | null>(null);
   useEffect(() => {
     if (demo) return;
     let active = true;
@@ -37,7 +38,10 @@ export function EditorialReview({
       });
     api<{ revisions: typeof revisions }>(`/articles/${article.id}`)
       .then((data) => {
-        if (active) setRevisions(data.revisions);
+        if (active) {
+          setRevisions(data.revisions);
+          setComparisonId((current) => current ?? data.revisions[0]?.id ?? null);
+        }
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -207,23 +211,63 @@ export function EditorialReview({
       {demo ? (
         <p>Sample mode does not create revisions.</p>
       ) : (
-        <ul>
-          {revisions.map((revision) => (
-            <li key={revision.id}>
-              <details>
-                <summary>
-                  Version {revision.version} · {new Date(revision.createdAt).toLocaleString()}
-                </summary>
-                <p>
-                  {revision.snapshot.status} · {revision.snapshot.title}
-                </p>
-                <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                  {revision.snapshot.body}
-                </pre>
-              </details>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul>
+            {revisions.map((revision) => (
+              <li key={revision.id}>
+                <details>
+                  <summary>
+                    Version {revision.version} · {new Date(revision.createdAt).toLocaleString()}
+                  </summary>
+                  <p>
+                    {revision.snapshot.status} · {revision.snapshot.title}
+                  </p>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => setComparisonId(revision.id)}
+                    aria-pressed={comparisonId === revision.id}
+                  >
+                    {comparisonId === revision.id
+                      ? 'Comparing this version'
+                      : 'Compare with current'}
+                  </button>
+                  <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                    {revision.snapshot.body}
+                  </pre>
+                </details>
+              </li>
+            ))}
+          </ul>
+          {comparisonId &&
+            (() => {
+              const revision = revisions.find((item) => item.id === comparisonId);
+              if (!revision) return null;
+              return (
+                <section className="revision-comparison" aria-labelledby="revision-compare-heading">
+                  <h4 id="revision-compare-heading">
+                    Compare version {revision.version} with current version {article.version}
+                  </h4>
+                  <div className="revision-comparison-grid">
+                    <article>
+                      <h5>Selected revision</h5>
+                      <p>
+                        <strong>{revision.snapshot.status}</strong> · {revision.snapshot.title}
+                      </p>
+                      <pre>{revision.snapshot.body}</pre>
+                    </article>
+                    <article>
+                      <h5>Current article</h5>
+                      <p>
+                        <strong>{article.status}</strong> · {article.title}
+                      </p>
+                      <pre>{article.body}</pre>
+                    </article>
+                  </div>
+                </section>
+              );
+            })()}
+        </>
       )}
       {error && (
         <p role="alert" className="error">

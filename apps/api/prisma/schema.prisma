@@ -256,11 +256,126 @@ model MediaAsset {
   filename String @db.VarChar(191)
   mime String @db.VarChar(100)
   size Int
+  width Int?
+  height Int?
+  sha256 String? @db.Char(64)
   alt String @db.VarChar(300)
   credit String @db.VarChar(300)
   ownerId String @db.VarChar(191)
+  rightsStatus MediaRightsStatus @default(PENDING)
+  rightsSource String? @db.VarChar(1000)
+  rightsReviewedBy String? @db.VarChar(191)
+  rightsReviewedAt DateTime?
   createdAt DateTime @default(now())
   articles Article[]
+
+  @@index([rightsStatus, createdAt])
+}
+
+enum MediaRightsStatus {
+  PENDING
+  CLEARED
+  REJECTED
+}
+
+enum SocialConsentChannel {
+  FACEBOOK
+  INSTAGRAM
+  X
+  WHATSAPP
+  TELEGRAM
+  YOUTUBE
+}
+
+model SocialConsent {
+  id         String              @id @default(cuid())
+  subjectHash String              @db.Char(64)
+  channel    SocialConsentChannel
+  purpose    String              @db.VarChar(120)
+  source     String              @db.VarChar(500)
+  grantedAt  DateTime            @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime            @default(now())
+
+  @@index([subjectHash, channel, purpose])
+  @@index([revokedAt, channel])
+}
+
+enum BusinessStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+}
+
+enum OfferStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+  SPAM
+}
+
+model LocalBusiness {
+  id          String         @id @default(cuid())
+  name        String         @db.VarChar(180)
+  slug        String         @unique @db.VarChar(191)
+  description String         @db.Text
+  category    String         @db.VarChar(100)
+  location    String         @db.VarChar(100)
+  phone       String?        @db.VarChar(40)
+  website     String?        @db.VarChar(500)
+  ownerId     String?
+  status      BusinessStatus @default(PENDING)
+  verifiedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  offers      LocalOffer[]
+  leads       LocalLead[]
+
+  @@index([status, location])
+  @@index([ownerId])
+}
+
+model LocalOffer {
+  id          String      @id @default(cuid())
+  businessId  String
+  title       String      @db.VarChar(180)
+  description String      @db.Text
+  terms       String?     @db.Text
+  startsAt    DateTime
+  endsAt      DateTime
+  status      OfferStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  business    LocalBusiness @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  leads       LocalLead[]
+
+  @@index([businessId, status, endsAt])
+}
+
+model LocalLead {
+  id         String     @id @default(cuid())
+  businessId String
+  offerId    String?
+  name       String     @db.VarChar(160)
+  email      String     @db.VarChar(320)
+  phone      String?    @db.VarChar(40)
+  message    String     @db.Text
+  consentAt  DateTime
+  status     LeadStatus @default(NEW)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  business   LocalBusiness @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  offer      LocalOffer? @relation(fields: [offerId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, status, createdAt])
 }
 
 enum AiRunStatus {

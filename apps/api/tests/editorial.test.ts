@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { guardTransition, articleSchema, publicArticleSelect } from '../src/editorial.js';
+import {
+  guardTransition,
+  articleSchema,
+  publicArticleIndexSelect,
+  publicArticleSelect,
+} from '../src/editorial.js';
 import type { AuthenticatedUser } from '../src/identity.js';
 
 const editor: AuthenticatedUser = {
@@ -21,6 +26,14 @@ describe('editorial governance', () => {
     for (const field of ['claims', 'sources', 'revisions', 'approvedBy', 'authorId', 'version'])
       expect(publicArticleSelect).not.toHaveProperty(field);
     expect(publicArticleSelect.author.select).toEqual({ displayName: true });
+    expect(publicArticleIndexSelect).toEqual({
+      slug: true,
+      title: true,
+      category: true,
+      location: true,
+      publishedAt: true,
+      updatedAt: true,
+    });
   });
   it('rechecks verification and independent approval before scheduling or publication', () => {
     for (const target of ['SCHEDULED', 'PUBLISHED']) {
@@ -34,6 +47,19 @@ describe('editorial governance', () => {
           editor,
         ),
       ).not.toThrow();
+      expect(() =>
+        guardTransition(
+          {
+            ...ready,
+            status: 'APPROVED',
+            approvedBy: editor.id,
+            approvedAt: new Date(),
+            image: { rightsStatus: 'PENDING' },
+          },
+          target,
+          editor,
+        ),
+      ).toThrow('Independent approval');
     }
   });
   it('requires independent approval even for super administrators', () => {

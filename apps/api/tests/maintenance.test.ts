@@ -106,5 +106,7 @@ describe('maintenance safeguards (repository doubles)', () => {
     expect(publicationReady({ ...article, sources: [] })).toBe(false);
     expect(publicationReady({ ...article, claims: [{ status: 'UNVERIFIED' }] })).toBe(false);
     expect(publicationReady({ ...article, approvedAt: null })).toBe(false);
+    expect(publicationReady({ ...article, image: { rightsStatus: 'PENDING' } })).toBe(false);
+    expect(publicationReady({ ...article, image: { rightsStatus: 'CLEARED' } })).toBe(true);
   });
 });
