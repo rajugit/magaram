@@ -16,7 +16,7 @@ Each phase requires working persisted workflows, authorization checks, validatio
 | 5 SEO                   | In progress              | Canonicals, metadata, dynamic sitemap, RSS, news sitemap, filtered search, and category/location archives; accessibility and production acceptance pending |
 | 6 Social                | Contract foundation      | Provider-neutral validation and fail-closed inactive adapters; official providers, consent ledger, durable delivery and retries remain pending             |
 | 7 Local                 | Core deployed to preview | Audited verification, reviewed offers, Tamil directory and consented leads; `/preview/7`; local/live smoke passed; broader production acceptance pending   |
-| 8 Advertising           | Core release candidate   | Owned campaigns, independent review, exclusive placements and unpaid quotes; payments/public ad delivery disabled                                                                                                        |
+| 8 Advertising           | Core deployed live   | Owned campaigns, independent review, exclusive placements and unpaid quotes; payments/public ad delivery disabled                                                                                                        |
 | 9 Revenue expansion     | Pending                  | Moderated jobs, classifieds, property, education, deals                                                                                                    |
 | 10 Audience             | Pending                  | Membership, newsletter, subscription lifecycle                                                                                                             |
 | 11 Media business       | Pending                  | Creators, services, events, intelligence, licensing                                                                                                        |
@@ -42,3 +42,7 @@ The low-cost AWS preview runs on a 4 GB Lightsail server in Mumbai at `https://m
 ### Phase 7 local milestone — 2026-09-24
 
 See `PHASE_7_PROGRESS.md` for delivered behavior, tests and remaining acceptance. Public directory: `/local`; staff workspace: `/admin/businesses`; labelled previews: `/preview/7` and `/preview/7/workspace`. The architecture and remaining phase sequence are recorded in `ARCHITECTURE_NEXT_STEPS.md`. Deployed to the AWS preview on 2026-09-25 at `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`; backup, migrations and release health checks passed. Local smoke: 29 checks passed. Live testing-account login, secure cookies, permissions and logout passed. The public version proxy was corrected and authenticated live smoke passed with the exact commit. See `TEST_REPORT_2026-09-25.md`.
+
+### Phase 8 release — 2026-09-25
+
+Commit `a79b5ebe66af309d059c355ada8841f29922af11` is installed on the existing server at `magarammedia.in`. Backup, seventh migration, role seed, service startup, exact-version check and authenticated live smoke passed. `/preview/8` was inspected in the browser; `/admin/campaigns` is the authenticated workspace. Typecheck, lint, production build, 45 unit tests and 15 isolated integration tests passed locally. Public ads remain empty; checkout and delivery remain disabled. Full production-readiness sign-off and payment-provider acceptance are still pending. See `PHASE_8_WALKTHROUGH.md`.
