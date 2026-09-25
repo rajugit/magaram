@@ -17,6 +17,7 @@ export function generateStaticParams() {
     { phase: '1', screen: [] },
     { phase: '3', screen: [] },
     { phase: '7', screen: [] },
+    { phase: '8', screen: [] },
     { phase: '7', screen: ['workspace'] },
     ...[
       [],
@@ -47,6 +48,7 @@ export default async function PhasePreview({
   if (phase === '1') return <Login />;
   if (phase === '2') return <Workspace path={screen} initialPreview />;
   if (phase === '3') return <Workspace path={['ai']} initialPreview />;
+  if (phase === '8') return <Workspace path={['campaigns']} initialPreview />;
   if (phase === '7') {
     if (screen[0] === 'workspace') return <Workspace path={['businesses']} initialPreview />;
     return (

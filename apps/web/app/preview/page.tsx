@@ -39,9 +39,11 @@ export default function Previews() {
                         ? 'Public experience preview'
                         : i === 7
                           ? 'Local workflow implemented'
-                          : i === 13
-                            ? 'AWS preview live'
-                            : 'Planned'}
+                          : i === 8
+                            ? 'Campaign review built · payments inactive'
+                            : i === 13
+                              ? 'AWS preview live'
+                              : 'Planned'}
             </span>
             <p>
               {i === 0
@@ -71,6 +73,11 @@ export default function Previews() {
             {i === 3 && (
               <Link className="button secondary" href="/preview/3">
                 Preview AI safeguards <Icon name="arrow" size={16} />
+              </Link>
+            )}
+            {i === 8 && (
+              <Link className="button secondary" href="/preview/8">
+                Preview advertising <Icon name="arrow" size={16} />
               </Link>
             )}
             {i === 7 && (

@@ -1315,3 +1315,42 @@ textarea::placeholder {
   border-bottom: 1px solid var(--line);
   overflow-wrap: anywhere;
 }
+
+.advertising-workbench .ad-placement {
+  border-top: 1px solid var(--line);
+  padding-block: 16px;
+}
+.advertising-workbench .ad-creative-preview {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin-block: 16px;
+  background: #fffaf0;
+  overflow-wrap: anywhere;
+}
+.advertising-workbench .ad-creative-preview h4 {
+  margin-block: 12px;
+  font-size: 1.2rem;
+  line-height: 1.7;
+}
+.advertising-workbench .ad-creative-preview p {
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+.advertising-workbench .ad-creative-preview a {
+  text-decoration: underline;
+}
+.advertising-workbench .ad-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-block: 16px;
+}
+.advertising-workbench .ad-invoice {
+  padding: 20px;
+  background: #f4f6f1;
+  border-radius: 12px;
+  margin-block: 16px;
+  overflow-wrap: anywhere;
+}

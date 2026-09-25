@@ -423,3 +423,90 @@ model AiDailyUsage {
   requests Int @default(0)
   @@id([scope, day])
 }
+
+enum AdCampaignStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AdInvoiceStatus {
+  UNPAID
+  VOID
+}
+
+model Advertiser {
+  id String @id @default(cuid())
+  ownerId String @unique @db.VarChar(191)
+  name String @db.VarChar(180)
+  contactEmail String @db.VarChar(320)
+  billingAddress String @db.VarChar(1000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  campaigns AdCampaign[]
+}
+
+model AdPlacement {
+  id String @id @default(cuid())
+  key String @unique @db.VarChar(80)
+  name String @db.VarChar(180)
+  enabled Boolean @default(false)
+  dailyRatePaise Int?
+  version Int @default(1)
+  updatedAt DateTime @updatedAt
+  campaigns AdCampaign[]
+}
+
+model AdCampaign {
+  id String @id @default(cuid())
+  advertiserId String
+  advertiser Advertiser @relation(fields: [advertiserId], references: [id])
+  placementId String
+  placement AdPlacement @relation(fields: [placementId], references: [id])
+  headline String @db.VarChar(180)
+  body String @db.Text
+  destinationUrl String @db.VarChar(1000)
+  rightsEvidence String @db.VarChar(2000)
+  disclosure String @default("விளம்பரம்") @db.VarChar(100)
+  startsAt DateTime
+  endsAt DateTime
+  status AdCampaignStatus @default(DRAFT)
+  version Int @default(1)
+  submittedBy String? @db.VarChar(191)
+  lastEditedBy String @db.VarChar(191)
+  reviewedBy String? @db.VarChar(191)
+  reviewedAt DateTime?
+  reviewNote String? @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoice AdInvoice?
+  @@index([advertiserId, createdAt])
+  @@index([placementId, status, startsAt, endsAt])
+}
+
+model AdInvoice {
+  id String @id @default(cuid())
+  campaignId String @unique
+  campaign AdCampaign @relation(fields: [campaignId], references: [id])
+  currency String @default("INR") @db.Char(3)
+  amountPaise Int
+  dailyRatePaise Int
+  days Int
+  billingSnapshot Json
+  status AdInvoiceStatus @default(UNPAID)
+  createdAt DateTime @default(now())
+  voidedAt DateTime?
+  attempts AdPaymentAttempt[]
+}
+
+model AdPaymentAttempt {
+  id String @id @default(cuid())
+  invoiceId String
+  invoice AdInvoice @relation(fields: [invoiceId], references: [id])
+  requestKey String @db.VarChar(100)
+  status String @default("UNAVAILABLE") @db.VarChar(30)
+  createdAt DateTime @default(now())
+  @@unique([invoiceId, requestKey])
+}

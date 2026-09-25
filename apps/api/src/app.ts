@@ -23,6 +23,7 @@ import { aiRouter } from './ai.js';
 import type { AiProvider, AiLimits } from './ai-service.js';
 import { requireAuthentication, requirePermission } from './rbac.js';
 import { socialRouter } from './social.js';
+import { advertisingRouter } from './advertising.js';
 import { localRouter } from './local.js';
 
 const SESSION_COOKIE = 'magaram_session';
@@ -409,6 +410,8 @@ export function createApp(dependencies: AppDependencies): Express {
   });
   if (dependencies.db) app.use('/api/v1', editorialRouter(dependencies.db, csrfProtection(tokens)));
   if (dependencies.db) app.use('/api/v1', socialRouter(dependencies.db, csrfProtection(tokens)));
+  if (dependencies.db)
+    app.use('/api/v1', advertisingRouter(dependencies.db, csrfProtection(tokens)));
   if (dependencies.db) app.use('/api/v1', localRouter(dependencies.db, csrfProtection(tokens)));
 
   app.use((_request, _response, next) => {

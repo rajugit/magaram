@@ -11,6 +11,9 @@ const permissions = [
   { code: 'articles:fact-check', description: 'Record fact-check assessments.' },
   { code: 'social:manage', description: 'Manage social distribution configuration.' },
   { code: 'local:manage', description: 'Manage verified local businesses, offers and leads.' },
+  { code: 'ads:own', description: 'Create and manage own advertiser campaigns.' },
+  { code: 'ads:manage', description: 'Manage advertising inventory and campaigns.' },
+  { code: 'ads:review', description: 'Independently review advertising campaigns.' },
   { code: 'sales:manage', description: 'Manage sales and advertiser records.' },
   { code: 'finance:read', description: 'View financial records.' },
   { code: 'analytics:read', description: 'View privacy-safe analytics.' },
@@ -19,12 +22,20 @@ const permissions = [
 const roles = [
   { code: 'SUPER_ADMIN', name: 'Super administrator', permissions: ['*'] },
   { code: 'ADMIN', name: 'Administrator', permissions: ['settings:read', 'audit:read'] },
-  { code: 'EDITOR', name: 'Editor', permissions: ['articles:draft', 'articles:review'] },
+  {
+    code: 'EDITOR',
+    name: 'Editor',
+    permissions: ['articles:draft', 'articles:review', 'ads:review'],
+  },
   { code: 'REPORTER', name: 'Reporter', permissions: ['articles:draft'] },
   { code: 'FACT_CHECKER', name: 'Fact checker', permissions: ['articles:fact-check'] },
   { code: 'SOCIAL_MANAGER', name: 'Social manager', permissions: ['social:manage'] },
-  { code: 'SALES_MANAGER', name: 'Sales manager', permissions: ['sales:manage', 'local:manage'] },
-  { code: 'ADVERTISER', name: 'Advertiser', permissions: [] },
+  {
+    code: 'SALES_MANAGER',
+    name: 'Sales manager',
+    permissions: ['sales:manage', 'local:manage', 'ads:manage'],
+  },
+  { code: 'ADVERTISER', name: 'Advertiser', permissions: ['ads:own'] },
   { code: 'BUSINESS_OWNER', name: 'Business owner', permissions: [] },
   { code: 'RECRUITER', name: 'Recruiter', permissions: [] },
   { code: 'FINANCE', name: 'Finance analyst', permissions: ['finance:read'] },
@@ -33,6 +44,13 @@ const roles = [
 ] as const;
 
 async function seed() {
+  for (const [key, name] of [
+    ['news-banner', 'செய்திப் பக்க விளம்பரம்'],
+    ['local-banner', 'உள்ளூர் பக்க விளம்பரம்'],
+  ]) {
+    await prisma.adPlacement.upsert({ where: { key }, update: {}, create: { key, name } });
+  }
+
   for (const [kind, slug, name] of [
     ['category', 'local', 'உள்ளூர்'],
     ['category', 'tamil-nadu', 'தமிழ்நாடு'],

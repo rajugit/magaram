@@ -7,6 +7,7 @@ import { Brand, Icon } from './brand';
 import { api } from '../_lib/api';
 import { demoArticles, navGroups, contactEmail } from '../_lib/data';
 import type { Article, ArticleStatus } from '../_lib/data';
+import { AdvertisingWorkbench } from './advertising-workbench';
 import { LocalWorkbench } from './local-workbench';
 import { AccountSecurity } from './account-security';
 import { EditorialReview } from './editorial-review';
@@ -450,6 +451,7 @@ export function Workspace({
                 </section>
               )}
               {page === 'ai' && <AiWorkbench articles={articles} demo={demo} />}
+              {page === 'campaigns' && <AdvertisingWorkbench demo={demo} />}
               {page === 'businesses' && <LocalWorkbench demo={demo} />}
               {page === 'taxonomy' && <Taxonomy demo={demo} />}
               {![
@@ -463,6 +465,7 @@ export function Workspace({
                 'account',
                 'taxonomy',
                 'businesses',
+                'campaigns',
               ].includes(page) && (
                 <section className="panel empty-state">
                   <Icon name={page === 'ai' ? 'spark' : 'clock'} size={40} />

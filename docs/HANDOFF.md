@@ -4,7 +4,7 @@ Updated 2026-09-25. The user requested completing all phases, project skills/doc
 
 ## Current milestone
 
-Phase 7 has been deployed to the existing AWS preview. Local and live acceptance checks passed. The next product milestone is Phase 8 advertising. Do not abandon release verification when a follow-up says “proceed”.
+Phase 8 campaign review and quotes are implemented and locally verified. The user explicitly requested committing and deploying to the existing live server on 2026-09-25. This is not full product production-readiness sign-off. Do not abandon release verification when a follow-up says “proceed”.
 
 - Tested application commit: `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`, pushed to `origin/main`.
 - Deployment reported healthy at `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`; the previous release is `d144b1199fbade0c681fda0f377f8db573d6c18c`. Backup completed before the three additive migrations.
@@ -18,8 +18,8 @@ Phase 7 has been deployed to the existing AWS preview. Local and live acceptance
 
 ## Next actions
 
-1. Implement Phase 8 advertising according to `PHASE_ACCEPTANCE.md` and `ARCHITECTURE_NEXT_STEPS.md`. Keep payment processing unavailable until a real provider is configured and verified.
-2. Add its persisted workflow, authorization/validation tests and visible preview, then update this handoff and the tracker.
+1. Release the Phase 8 candidate and verify the exact installed SHA with `deploy/smoke.mjs`. See `PHASE_8_WALKTHROUGH.md`.
+2. Local evidence: typecheck, lint, production build, 45 unit tests and 15 isolated integration tests passed; all seven migrations applied. Campaign ownership, independent review, concurrent inventory conflicts, immutable quotes, cancellation and unavailable/idempotent checkout are covered. Payment processing and public ad delivery remain disabled.
 3. Preserve the tested Phase 7 release and the owner's existing/testing accounts. Credentials and `.deploy` stay ignored; do not repeat account creation.
 
 Remaining phases and provider integrations are not complete. Actual production sign-off, live payment/email/social delivery and broader editorial/accessibility/restore acceptance remain separate gates.
