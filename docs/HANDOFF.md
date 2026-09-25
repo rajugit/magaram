@@ -24,3 +24,7 @@ Phase 8 campaign review and quotes are deployed and verified on the existing liv
 4. Preserve the prior tested Phase 7 release and the owner's existing/testing accounts. Credentials and `.deploy` stay ignored; do not repeat account creation.
 
 Remaining phases and provider integrations are not complete. Actual production sign-off, live payment/email/social delivery and broader editorial/accessibility/restore acceptance remain separate gates.
+
+## Account-connection review — 2026-09-25
+
+The user requested a secure browser/account review after deployment. See `ACCOUNT_CONNECTIONS.md`. YouTube website link was saved; Instagram bio now includes the current website, but its separate link needs the mobile app. AWS root MFA, firewall, snapshot status and root-only secret-file permissions were checked without secret values. SES sender verification now reports `SUCCESS`, but the account remains in sandbox and application email remains inactive. The next owner step is SES production-access approval and a later delivery test. No API publishing credentials were obtained or integrations enabled. Complete the pending account setup before interpreting the next “proceed” as a new product phase.
