@@ -4,6 +4,7 @@ import {
   type ConverseCommandOutput,
 } from '@aws-sdk/client-bedrock-runtime';
 import { SESv2Client, SendEmailCommand, type SendEmailCommandOutput } from '@aws-sdk/client-sesv2';
+import nodemailer from 'nodemailer';
 
 import { ApiError } from './api-response.js';
 import type { AiProvider } from './ai-service.js';
@@ -111,4 +112,54 @@ export function createSesPasswordResetDelivery(
   baseUrl: string,
 ): SesPasswordResetDelivery {
   return new SesPasswordResetDelivery(from, baseUrl, new SESv2Client({ region }));
+}
+
+export interface MailTransport {
+  sendMail(options: { from: string; to: string; subject: string; text: string }): Promise<unknown>;
+}
+
+export class WorkspaceSmtpPasswordResetDelivery implements PasswordResetDelivery {
+  constructor(
+    private readonly from: string,
+    private readonly baseUrl: string,
+    private readonly transport: MailTransport,
+  ) {}
+
+  async deliver(input: { recipient: string; token: string; expiresAt: Date }): Promise<void> {
+    const resetUrl = new URL('/reset-password', this.baseUrl);
+    resetUrl.searchParams.set('token', input.token);
+    try {
+      await this.transport.sendMail({
+        from: this.from,
+        to: input.recipient,
+        subject: 'Reset your மகரம் மீடியா password',
+        text: `A password reset was requested for your மகரம் மீடியா account.\n\nReset your password: ${resetUrl}\n\nThis link expires at ${input.expiresAt.toISOString()}. If you did not request it, you can ignore this email.`,
+      });
+    } catch {
+      throw new ApiError(
+        503,
+        'DELIVERY_UNAVAILABLE',
+        'Password reset delivery is temporarily unavailable. Try again later.',
+      );
+    }
+  }
+}
+
+export function createWorkspaceSmtpPasswordResetDelivery(input: {
+  host: string;
+  port: number;
+  from: string;
+  baseUrl: string;
+  username?: string;
+  password?: string;
+}): WorkspaceSmtpPasswordResetDelivery {
+  const transport = nodemailer.createTransport({
+    host: input.host,
+    port: input.port,
+    secure: false,
+    requireTLS: true,
+    auth:
+      input.username && input.password ? { user: input.username, pass: input.password } : undefined,
+  });
+  return new WorkspaceSmtpPasswordResetDelivery(input.from, input.baseUrl, transport);
 }

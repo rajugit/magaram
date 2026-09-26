@@ -5,7 +5,11 @@ import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 import { PrismaIdentityRepository } from './prisma-identity-repository.js';
 import { createReadinessCheck } from './readiness.js';
-import { createBedrockAiProvider, createSesPasswordResetDelivery } from './aws-integrations.js';
+import {
+  createBedrockAiProvider,
+  createSesPasswordResetDelivery,
+  createWorkspaceSmtpPasswordResetDelivery,
+} from './aws-integrations.js';
 
 const config = loadConfig();
 const aiProvider =
@@ -19,7 +23,16 @@ const passwordResetDelivery =
         config.SES_FROM_EMAIL!,
         config.PASSWORD_RESET_BASE_URL!,
       )
-    : undefined;
+    : config.EMAIL_PROVIDER === 'workspace_smtp'
+      ? createWorkspaceSmtpPasswordResetDelivery({
+          host: config.WORKSPACE_SMTP_HOST,
+          port: config.WORKSPACE_SMTP_PORT,
+          from: config.WORKSPACE_SMTP_FROM_EMAIL!,
+          baseUrl: config.PASSWORD_RESET_BASE_URL!,
+          username: config.WORKSPACE_SMTP_USERNAME,
+          password: config.WORKSPACE_SMTP_PASSWORD,
+        })
+      : undefined;
 const prisma = new PrismaClient();
 const redis = new IORedis(config.REDIS_URL, { maxRetriesPerRequest: 1, enableOfflineQueue: false });
 redis.on('error', () =>

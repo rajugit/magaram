@@ -132,6 +132,8 @@ const config: AppConfig = {
   AI_MAX_OUTPUT_TOKENS: 1200,
   AI_TIMEOUT_MS: 30000,
   EMAIL_PROVIDER: 'inactive',
+  WORKSPACE_SMTP_HOST: 'smtp-relay.gmail.com',
+  WORKSPACE_SMTP_PORT: 587,
 };
 
 describe('foundation API', () => {

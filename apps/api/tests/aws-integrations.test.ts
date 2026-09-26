@@ -2,7 +2,11 @@ import type { ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import type { SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BedrockAiProvider, SesPasswordResetDelivery } from '../src/aws-integrations.js';
+import {
+  BedrockAiProvider,
+  SesPasswordResetDelivery,
+  WorkspaceSmtpPasswordResetDelivery,
+} from '../src/aws-integrations.js';
 
 describe('Amazon integrations', () => {
   it('uses Bedrock Converse with the configured model, limits and abort signal', async () => {
@@ -58,5 +62,31 @@ describe('Amazon integrations', () => {
     const body = command.input.Content?.Simple?.Body?.Text?.Data || '';
     expect(body).toContain('https://65.2.18.204/reset-password?token=');
     expect(body).toContain('a'.repeat(43));
+  });
+
+  it('sends a one-recipient Workspace SMTP reset message', async () => {
+    const sendMail = vi.fn().mockResolvedValue({ messageId: 'test-message' });
+    const delivery = new WorkspaceSmtpPasswordResetDelivery(
+      'admin@magarammedia.in',
+      'https://magarammedia.in',
+      {
+        sendMail,
+      },
+    );
+    await delivery.deliver({
+      recipient: 'editor@example.test',
+      token: 'b'.repeat(43),
+      expiresAt: new Date('2026-09-17T12:00:00.000Z'),
+    });
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'admin@magarammedia.in',
+        to: 'editor@example.test',
+        subject: 'Reset your மகரம் மீடியா password',
+      }),
+    );
+    expect(sendMail.mock.calls[0][0].text).toContain(
+      'https://magarammedia.in/reset-password?token=',
+    );
   });
 });

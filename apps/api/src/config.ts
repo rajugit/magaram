@@ -23,8 +23,13 @@ const environmentSchema = z
     AI_MAX_INPUT_CHARS: z.coerce.number().int().min(100).max(30000).default(12000),
     AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().min(100).max(4000).default(1200),
     AI_TIMEOUT_MS: z.coerce.number().int().min(50).max(60000).default(30000),
-    EMAIL_PROVIDER: z.enum(['inactive', 'ses']).default('inactive'),
+    EMAIL_PROVIDER: z.enum(['inactive', 'ses', 'workspace_smtp']).default('inactive'),
     SES_FROM_EMAIL: z.string().trim().email().max(320).optional(),
+    WORKSPACE_SMTP_HOST: z.string().trim().min(1).max(255).default('smtp-relay.gmail.com'),
+    WORKSPACE_SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+    WORKSPACE_SMTP_FROM_EMAIL: z.string().trim().email().max(320).optional(),
+    WORKSPACE_SMTP_USERNAME: z.string().trim().min(1).max(320).optional(),
+    WORKSPACE_SMTP_PASSWORD: z.string().min(1).max(500).optional(),
     PASSWORD_RESET_BASE_URL: z.string().url().max(500).optional(),
   })
   .superRefine((value, context) => {
@@ -52,9 +57,25 @@ const environmentSchema = z
         path: ['PASSWORD_RESET_BASE_URL'],
         message: 'PASSWORD_RESET_BASE_URL is required when Amazon SES delivery is enabled.',
       });
+    if (value.EMAIL_PROVIDER === 'workspace_smtp' && !value.WORKSPACE_SMTP_FROM_EMAIL)
+      context.addIssue({
+        code: 'custom',
+        path: ['WORKSPACE_SMTP_FROM_EMAIL'],
+        message: 'WORKSPACE_SMTP_FROM_EMAIL is required when Workspace SMTP delivery is enabled.',
+      });
+    if (
+      value.EMAIL_PROVIDER === 'workspace_smtp' &&
+      ((value.WORKSPACE_SMTP_USERNAME && !value.WORKSPACE_SMTP_PASSWORD) ||
+        (!value.WORKSPACE_SMTP_USERNAME && value.WORKSPACE_SMTP_PASSWORD))
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['WORKSPACE_SMTP_USERNAME'],
+        message: 'Workspace SMTP username and password must be configured together.',
+      });
     if (
       value.NODE_ENV === 'production' &&
-      value.EMAIL_PROVIDER === 'ses' &&
+      ['ses', 'workspace_smtp'].includes(value.EMAIL_PROVIDER) &&
       value.PASSWORD_RESET_BASE_URL &&
       !value.PASSWORD_RESET_BASE_URL.startsWith('https://')
     )
