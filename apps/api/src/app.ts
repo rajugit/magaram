@@ -25,6 +25,7 @@ import { requireAuthentication, requirePermission } from './rbac.js';
 import { socialRouter } from './social.js';
 import { advertisingRouter } from './advertising.js';
 import { localRouter } from './local.js';
+import { marketplaceRouter } from './marketplace.js';
 
 const SESSION_COOKIE = 'magaram_session';
 const CSRF_COOKIE = 'magaram_csrf';
@@ -413,6 +414,7 @@ export function createApp(dependencies: AppDependencies): Express {
   if (dependencies.db)
     app.use('/api/v1', advertisingRouter(dependencies.db, csrfProtection(tokens)));
   if (dependencies.db) app.use('/api/v1', localRouter(dependencies.db, csrfProtection(tokens)));
+  if (dependencies.db) app.use('/api/v1', marketplaceRouter(dependencies.db, csrfProtection(tokens)));
 
   app.use((_request, _response, next) => {
     next(new ApiError(404, 'NOT_FOUND', 'The requested resource was not found.'));

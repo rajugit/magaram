@@ -437,6 +437,23 @@ enum AdInvoiceStatus {
   VOID
 }
 
+enum MarketplaceCategory {
+  JOB
+  CLASSIFIED
+  PROPERTY
+  EDUCATION
+  DEAL
+}
+
+enum MarketplaceStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
 model Advertiser {
   id String @id @default(cuid())
   ownerId String @unique @db.VarChar(191)
@@ -509,4 +526,41 @@ model AdPaymentAttempt {
   status String @default("UNAVAILABLE") @db.VarChar(30)
   createdAt DateTime @default(now())
   @@unique([invoiceId, requestKey])
+}
+
+model MarketplaceListing {
+  id              String              @id @default(cuid())
+  ownerId         String
+  category        MarketplaceCategory
+  title           String              @db.VarChar(180)
+  description     String              @db.Text
+  location        String              @db.VarChar(120)
+  priceOrSalary   String?             @db.VarChar(120)
+  contactEmail    String              @db.VarChar(320)
+  contactPhone    String?             @db.VarChar(40)
+  rightsEvidence  String              @db.VarChar(2000)
+  expiresAt       DateTime
+  status          MarketplaceStatus   @default(DRAFT)
+  version         Int                 @default(1)
+  submittedBy     String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNote      String?             @db.VarChar(2000)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  reports         MarketplaceReport[]
+
+  @@index([status, category, expiresAt])
+  @@index([ownerId, createdAt])
+}
+
+model MarketplaceReport {
+  id         String             @id @default(cuid())
+  listingId  String
+  reporterId String?
+  reason     String             @db.VarChar(1000)
+  createdAt  DateTime           @default(now())
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt])
 }

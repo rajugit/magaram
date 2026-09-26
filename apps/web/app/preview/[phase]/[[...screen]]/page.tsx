@@ -18,6 +18,7 @@ export function generateStaticParams() {
     { phase: '3', screen: [] },
     { phase: '7', screen: [] },
     { phase: '8', screen: [] },
+    { phase: '9', screen: [] },
     { phase: '7', screen: ['workspace'] },
     ...[
       [],
@@ -49,6 +50,34 @@ export default async function PhasePreview({
   if (phase === '2') return <Workspace path={screen} initialPreview />;
   if (phase === '3') return <Workspace path={['ai']} initialPreview />;
   if (phase === '8') return <Workspace path={['campaigns']} initialPreview />;
+  if (phase === '9')
+    return (
+      <div className="public-shell">
+        <PublicHeader />
+        <main id="content" className="public-main news-index">
+          <header className="section-intro">
+            <p className="section-kicker">மகரம் சந்தை · முன்னோட்டம்</p>
+            <h1>உள்ளூர் வாய்ப்புகள் மற்றும் பட்டியல்கள்</h1>
+            <p>வேலை, பொருட்கள், சொத்து, கல்வி மற்றும் சலுகைகள் — ஒவ்வொரு பதிவும் மதிப்பாய்வுக்குப் பிறகே பொதுவாகும்.</p>
+          </header>
+          <section className="card-grid">
+            {[
+              ['வேலை', 'மாதிரி உள்ளடக்க எழுத்தாளர் தேவை', 'சென்னை'],
+              ['சொத்து', 'மாதிரி வாடகை வீடு', 'மதுரை'],
+              ['கல்வி', 'மாதிரி தேர்வு பயிற்சி வகுப்பு', 'கோவை'],
+            ].map(([kind, title, location]) => (
+              <article className="card" key={title}>
+                <p className="section-kicker">{kind} · மாதிரி</p>
+                <h2>{title}</h2>
+                <p>{location} · வெளியீட்டுக்கு முன் உரிமை மற்றும் தகவல் சரிபார்ப்பு தேவை.</p>
+                <span className="muted">மாதிரி பதிவு — தொடர்பு விவரம் வெளியிடப்படவில்லை</span>
+              </article>
+            ))}
+          </section>
+        </main>
+        <PublicFooter />
+      </div>
+    );
   if (phase === '7') {
     if (screen[0] === 'workspace') return <Workspace path={['businesses']} initialPreview />;
     return (

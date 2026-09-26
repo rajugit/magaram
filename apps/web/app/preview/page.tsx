@@ -41,6 +41,8 @@ export default function Previews() {
                           ? 'Local workflow implemented'
                           : i === 8
                             ? 'Campaign review built · payments inactive'
+                            : i === 9
+                              ? 'Moderated listing foundation · provider independent'
                             : i === 13
                               ? 'AWS preview live'
                               : 'Planned'}
@@ -58,6 +60,8 @@ export default function Previews() {
                         ? 'Tamil-first public news pages, article reading, editorial trust information and responsive layouts.'
                         : i === 7
                           ? 'Business verification, offer review and consented enquiries. Preview uses labelled sample data.'
+                          : i === 9
+                            ? 'Shared marketplace listings with moderation, expiry and public privacy controls.'
                           : 'Implementation follows the preceding milestone. This phase is not complete yet.'}
             </p>
             {i === 1 && (
@@ -78,6 +82,11 @@ export default function Previews() {
             {i === 8 && (
               <Link className="button secondary" href="/preview/8">
                 Preview advertising <Icon name="arrow" size={16} />
+              </Link>
+            )}
+            {i === 9 && (
+              <Link className="button secondary" href="/preview/9">
+                Preview marketplace <Icon name="arrow" size={16} />
               </Link>
             )}
             {i === 7 && (

@@ -19,9 +19,13 @@ Phase 8 campaign review and quotes are deployed and verified on the existing liv
 ## Next actions
 
 1. Phase 8 release verification is complete. Installed commit: `a79b5ebe66af309d059c355ada8841f29922af11`. Backup, additive migration, permission seed, API/web/worker startup and authenticated `deploy/smoke.mjs` passed. Public `/version` matched exactly. Browser inspection verified `/preview/8`, sample labels, disabled demo forms and the payment/delivery notice. Previous application release: `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`. Do not redeploy merely because a turn resumed.
-2. Next work: advance Phase 9 according to the acceptance contracts while retaining the open Phase 8 payment/provider gate. See `PHASE_8_WALKTHROUGH.md` for the requested teaching guide.
+2. Phase 9 core is implemented locally and ready for exact-commit preview deployment. It provides shared moderated listings for jobs, classifieds, property, education and deals, with ownership, independent review, expiry, reports and public privacy controls. The labelled preview is `/preview/9`; API namespace is `/api/v1/market`.
 3. Local evidence: typecheck, lint, production build, 45 unit tests and 15 isolated integration tests passed; all seven migrations applied. Campaign ownership, independent review, concurrent inventory conflicts, immutable quotes, cancellation and unavailable/idempotent checkout are covered. Payment processing and public ad delivery remain disabled.
 4. Preserve the prior tested Phase 7 release and the owner's existing/testing accounts. Credentials and `.deploy` stay ignored; do not repeat account creation.
+
+## Phase 9 local evidence — 2026-09-26
+
+The additive marketplace migration `202609260001_marketplace` is applied locally. Typecheck, lint, Prisma validation and production build completed for the Phase 9 candidate. The live release still needs deployment smoke verification. Marketplace records do not expose contact email/phone in the public projection; review and report actions remain authenticated. Google Workspace setup is separate from application email, which remains inactive until SES production approval.
 
 Remaining phases and provider integrations are not complete. Actual production sign-off, live payment/email/social delivery and broader editorial/accessibility/restore acceptance remain separate gates.
 
