@@ -10,6 +10,7 @@ Checked 2026-09-25. This is a limited account/configuration review, not a comple
 | Instagram | `@magaram.in` has professional/business settings; website field points to the old domain | Preserved the existing Tamil bio and added `https://magarammedia.in`; reloaded and verified persistence |
 | Instagram website field | Desktop editor explicitly says links can only be edited on mobile | Mobile owner action remains; no workaround or private API used |
 | Email | SES sender verification was previously FAILED; account remains sandboxed | Owner approved resending verification; AWS now reports SUCCESS; AWS production-access control is disabled until `magarammedia.in` is verified as a sending domain |
+| Google Workspace | Domain Connect completed for `magarammedia.in`; Gmail activation confirmation shown | `admin@magarammedia.in` setup reached Gmail activated; Google says mail routing may take up to 24 hours |
 | AWS root security | MFA enabled; zero root access keys and signing certificates | No change necessary |
 | Firewall | Public TCP 80/443; SSH restricted to one IPv4 /32; no public IPv6 rules | No widening of access |
 | Backups | Seven listed daily snapshots report Success; backup timer active | Restore rehearsal still pending |
@@ -21,8 +22,8 @@ Gmail was open to an account-recovery email. Its contents and recovery link were
 ## Owner steps remaining
 
 1. In the Instagram mobile app, open Profile → Edit profile → Links. Change the existing website URL to `https://magarammedia.in` and save. The desktop bio now contains the current address, but that does not replace the old clickable link.
-2. Create an SES identity for `magarammedia.in`, copy the generated DKIM records, and add them at the authoritative DNS provider. This requires access to the domain DNS account; do not invent records or paste credentials into chat.
-3. After DNS verification succeeds, request SES production access for transactional password-reset email. Describe the low-volume, consent-triggered use case and explain bounce/complaint handling. Keep `EMAIL_PROVIDER=inactive` until AWS approves it and delivery tests pass.
+2. Monitor `admin@magarammedia.in` and the previous mail service during Google’s DNS propagation window. Confirm inbound and outbound mail with a harmless test message; do not paste message contents or credentials into chat.
+3. If SES sending is still required separately, create an SES identity for `magarammedia.in` and complete AWS production access. Google Workspace activation does not change the application’s SES configuration; keep `EMAIL_PROVIDER=inactive` until SES is approved and delivery tests pass.
 
 ## Connect publishing securely
 
