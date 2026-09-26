@@ -9,7 +9,7 @@ Checked 2026-09-25. This is a limited account/configuration review, not a comple
 | YouTube | Owner controls available for `@magaramin`; website link absent | Saved `https://magarammedia.in` as the channel website, titled `மகரம் மீடியா \| Website`; Studio returned to saved state with Publish disabled |
 | Instagram | `@magaram.in` has professional/business settings; website field points to the old domain | Preserved the existing Tamil bio and added `https://magarammedia.in`; reloaded and verified persistence |
 | Instagram website field | Desktop editor explicitly says links can only be edited on mobile | Mobile owner action remains; no workaround or private API used |
-| Email | SES sender verification was previously FAILED; account remains sandboxed | Owner approved resending verification; AWS now reports SUCCESS; delivery remains inactive until production access is granted |
+| Email | SES sender verification was previously FAILED; account remains sandboxed | Owner approved resending verification; AWS now reports SUCCESS; AWS production-access control is disabled until `magarammedia.in` is verified as a sending domain |
 | AWS root security | MFA enabled; zero root access keys and signing certificates | No change necessary |
 | Firewall | Public TCP 80/443; SSH restricted to one IPv4 /32; no public IPv6 rules | No widening of access |
 | Backups | Seven listed daily snapshots report Success; backup timer active | Restore rehearsal still pending |
@@ -21,8 +21,8 @@ Gmail was open to an account-recovery email. Its contents and recovery link were
 ## Owner steps remaining
 
 1. In the Instagram mobile app, open Profile → Edit profile → Links. Change the existing website URL to `https://magarammedia.in` and save. The desktop bio now contains the current address, but that does not replace the old clickable link.
-2. Request SES production access from the AWS console for transactional password-reset email. Describe the low-volume, consent-triggered use case and explain bounce/complaint handling. Keep `EMAIL_PROVIDER=inactive` until AWS approves it and delivery tests pass.
-3. Before enabling application email for arbitrary recipients, complete SES production approval and delivery/bounce/complaint handling. A verified domain sender is a later setup task requiring domain DNS access; do not invent DNS records or claim domain verification is complete.
+2. Create an SES identity for `magarammedia.in`, copy the generated DKIM records, and add them at the authoritative DNS provider. This requires access to the domain DNS account; do not invent records or paste credentials into chat.
+3. After DNS verification succeeds, request SES production access for transactional password-reset email. Describe the low-volume, consent-triggered use case and explain bounce/complaint handling. Keep `EMAIL_PROVIDER=inactive` until AWS approves it and delivery tests pass.
 
 ## Connect publishing securely
 
