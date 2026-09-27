@@ -13,7 +13,7 @@ const env = Object.fromEntries(
 const runtime = readFileSync('/etc/magaram/runtime.env', 'utf8');
 const origin = runtime.match(/^WEB_ORIGIN=(.+)$/m)?.[1];
 const expectedAi = /^AI_PROVIDER=bedrock$/m.test(runtime);
-const expectedEmail = /^EMAIL_PROVIDER=ses$/m.test(runtime);
+const expectedEmail = /^(?:EMAIL_PROVIDER=ses|EMAIL_PROVIDER=workspace_smtp)$/m.test(runtime);
 assert(origin?.startsWith('https://'));
 const check = async (path, expected, options = {}) => {
   const response = await fetch(origin + path, { ...options, signal: AbortSignal.timeout(15000) });
