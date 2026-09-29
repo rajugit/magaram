@@ -46,10 +46,16 @@ References: [Lightsail pricing](https://aws.amazon.com/lightsail/pricing/) and [
 
 The Amazon-integration release adds an official Bedrock Converse adapter, a secure Amazon SES password-reset delivery adapter and a reset page. It starts disabled until the root-only runtime configuration explicitly enables it. The initial Bedrock caps are 10 requests per user and 50 platform-wide per UTC day, with 12,000 input characters, 1,200 output tokens and a 30-second timeout. Enable SES only after the sender verification completes; SES sandbox restrictions still apply to recipients.
 
-Administrator email: `magaram.in@gmail.com`. To retrieve the generated password, run the following yourself in your own Terminal from the repository, with the `magaram` AWS profile configured. Do not ask an assistant to run this password-display command or paste its output into chat:
+The original administrator remains `magaram.in@gmail.com`. A separate Workspace administrator login `admin@magarammedia.in` has also been created for the owner. To retrieve either generated password, run the relevant command yourself in your own Terminal from the repository, with the `magaram` AWS profile configured. Do not ask an assistant to run a password-display command or paste its output into chat:
 
 ```sh
 node deploy/remote.mjs run "sudo sed -n 's/^SUPER_ADMIN_PASSWORD=//p' /etc/magaram/bootstrap.env"
+```
+
+For the Workspace administrator password:
+
+```sh
+node deploy/remote.mjs run "sudo sed -n 's/^PASSWORD=//p' /etc/magaram/admin-workspace.credentials"
 ```
 
 SSH is restricted to the original deployment operator's public IP. If your internet address changes, update only the server's SSH source rule before using the helper; do not open SSH globally. The helper pins server host keys from AWS and removes its temporary SSH key files when it exits normally.
