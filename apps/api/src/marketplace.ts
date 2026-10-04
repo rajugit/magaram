@@ -1,4 +1,4 @@
-import type { MarketplaceCategory, PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
 import { z } from 'zod';

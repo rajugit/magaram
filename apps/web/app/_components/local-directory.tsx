@@ -143,7 +143,7 @@ export function LocalDirectory({
                   </fieldset>
                   <p>
                     கோரிக்கையைத் திரும்பப் பெற:{' '}
-                    <a href="mailto:magaram.in@gmail.com">magaram.in@gmail.com</a>
+                    <a href="mailto:admin@magarammedia.in">admin@magarammedia.in</a>
                   </p>
                 </form>
               </details>

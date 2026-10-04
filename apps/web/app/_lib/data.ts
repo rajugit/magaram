@@ -35,7 +35,7 @@ export type Article = {
   corrections: { id: string; reason: string; createdAt: string }[];
   image?: { id: string; alt: string; credit: string } | null;
 };
-export const contactEmail = 'magaram.in@gmail.com';
+export const contactEmail = 'admin@magarammedia.in';
 export const demoArticles: Article[] = [
   [
     'chennai-neighbourhood',

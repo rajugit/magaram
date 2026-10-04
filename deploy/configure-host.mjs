@@ -11,7 +11,7 @@ if(!existsSync('/etc/magaram/runtime.env')) {
   const password=randomBytes(32).toString('hex');
   save('/etc/magaram/mysql.env',`MYSQL_DATABASE=magaram_media\nMYSQL_USER=magaram\nMYSQL_PASSWORD=${password}\nMYSQL_ROOT_PASSWORD=${randomBytes(32).toString('hex')}\n`);
   save('/etc/magaram/runtime.env',`NODE_ENV=production\nAPP_VERSION=0.2.0\nWEB_ORIGIN=https://${ip}\nAPI_PORT=4000\nTRUST_PROXY=true\nDATABASE_URL=mysql://magaram:${password}@127.0.0.1:33316/magaram_media\nREDIS_URL=redis://127.0.0.1:36379\nSESSION_SECRET=${randomBytes(48).toString('hex')}\n`);
-  save('/etc/magaram/bootstrap.env',`SUPER_ADMIN_EMAIL=magaram.in@gmail.com\nSUPER_ADMIN_NAME=Magaram Administrator\nSUPER_ADMIN_PASSWORD=${randomBytes(32).toString('hex')}\n`);
+  save('/etc/magaram/bootstrap.env',`SUPER_ADMIN_EMAIL=admin@magarammedia.in\nSUPER_ADMIN_NAME=Magaram Administrator\nSUPER_ADMIN_PASSWORD=${randomBytes(32).toString('hex')}\n`);
 }
 const tls=mode==='tls';
 const proxy=`location /api/v1/ { proxy_pass http://127.0.0.1:4000; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto https; proxy_set_header X-Forwarded-For $remote_addr; }

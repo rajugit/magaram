@@ -465,8 +465,8 @@ export function TrustPage({ pathPrefix = '' }: { pathPrefix?: string }) {
             <p className="section-kicker">தொடர்புக்கு</p>
             <h2>பிழை, திருத்தம் அல்லது செய்திக் குறிப்பு தெரிவிக்க விரும்புகிறீர்களா?</h2>
           </div>
-          <a href="mailto:magaram.in@gmail.com?subject=Magaram%20Media%20correction%20or%20news%20tip">
-            magaram.in@gmail.com
+          <a href="mailto:admin@magarammedia.in?subject=Magaram%20Media%20correction%20or%20news%20tip">
+            admin@magarammedia.in
           </a>
         </section>
       </main>
@@ -485,7 +485,7 @@ export function PublicFooter({ pathPrefix = '' }: { pathPrefix?: string }) {
       <nav aria-label="அடிக்குறிப்பு வழிசெலுத்தல்">
         <Link href={route(pathPrefix, '/news')}>செய்திகள்</Link>
         <Link href={route(pathPrefix, '/trust')}>நம்பிக்கை</Link>
-        <a href="mailto:magaram.in@gmail.com">தொடர்பு</a>
+        <a href="mailto:admin@magarammedia.in">தொடர்பு</a>
       </nav>
     </footer>
   );

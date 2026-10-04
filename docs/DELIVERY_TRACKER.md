@@ -1,6 +1,6 @@
 # Delivery tracker
 
-The user approved continuing through the full project on 2026-09-15 and requested a preview at each phase. This supersedes the earlier command-per-phase approval gate. The contact and initial administrator email is `magaram.in@gmail.com`.
+The user approved continuing through the full project on 2026-09-15 and requested a preview at each phase. This supersedes the earlier command-per-phase approval gate. The current contact and administrator email is `admin@magarammedia.in`; historical owner records remain preserved in audit documentation.
 
 ## Acceptance policy
 

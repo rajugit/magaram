@@ -18,6 +18,6 @@ Status: the Amazon Bedrock adapter is implemented and tested with an isolated cl
 
 ## Amazon email delivery
 
-Amazon SES is the selected password-reset delivery service. It is disabled by default and requires a verified sender, a root-only server configuration, and HTTPS reset links. The application exposes `/reset-password`; reset tokens are never included in API responses or logs. Until SES leaves its sandbox, it can deliver only to verified recipient identities. A verification email for `magaram.in@gmail.com` has been requested; the mailbox owner must complete that link before SES can be enabled.
+Amazon SES is the legacy password-reset delivery option; Google Workspace SMTP relay is the preferred sender path for `admin@magarammedia.in`. Either provider requires a verified sender, root-only server configuration and HTTPS reset links. The application exposes `/reset-password`; reset tokens are never included in API responses or logs. Provider activation remains gated until delivery is tested.
 
 Request/token limits are not a monetary spending cap. Remaining work includes measured monetary cost reporting, a real-model Tamil quality evaluation, SES production-access review, and domain-based sender verification after DNS is available. AI proposals must never bypass the existing independent fact-check and publishing workflow.

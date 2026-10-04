@@ -2,7 +2,7 @@
 
 ## Project choices
 
-- Publication contact: `magaram.in@gmail.com`.
+- Publication contact: `admin@magarammedia.in`.
 - Git author: `rajugit` / `raju.mca.r@gmail.com`.
 - Hosting: AWS, Mumbai (`ap-south-1`).
 - Dedicated AWS profile: `magaram`. Existing unrelated profiles must remain unchanged.

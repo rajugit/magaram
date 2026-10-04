@@ -16,7 +16,7 @@ export default function Previews() {
         Explore what’s built, what’s in progress, and what needs a live service connection.
       </p>
       <div className="notice" style={{ marginTop: 25 }}>
-        Contact: magaram.in@gmail.com · Hosting: AWS preview · Public previews use sample content
+        Contact: admin@magarammedia.in · Hosting: AWS preview · Public previews use sample content
         only
       </div>
       <div className="phase-grid">

@@ -13,7 +13,7 @@ Preview: <https://magarammedia.in/preview/2>. Live login: <https://magarammedia.
 - MySQL, Redis, API and web ports are loopback-only. Only HTTPS/HTTP are public; SSH is restricted to the deployment operator's address.
 - One image is built from the committed release, with independent web/API containers and resource limits. No placeholder queue consumer runs.
 - Secrets are generated on-server under root-only `/etc/magaram/`, never in Git, image layers, user-data or deployment output. The admin bootstrap password is isolated in `/etc/magaram/bootstrap.env` and must only be viewed in the owner's own secure terminal.
-- Amazon runtime credentials, when enabled, live only in root-owned `/etc/magaram/aws.env` and are mounted into the API container alone. The key is restricted to the APAC Nova Micro inference profile and SES sends from `magaram.in@gmail.com`; it is not stored in Git, the image or the web/worker containers.
+- Amazon runtime credentials, when enabled, live only in root-owned `/etc/magaram/aws.env` and are mounted into the API container alone. The key is restricted to the APAC Nova Micro inference profile and the configured sender is `admin@magarammedia.in`; it is not stored in Git, the image or the web/worker containers.
 
 ## Releasing
 
@@ -29,7 +29,7 @@ Run `sudo bash deploy/release.sh <full-commit-sha>` from the release directory. 
 - A failed app rollout can be rolled back using the previous image tag and compose configuration. Database migrations need separate compatibility review; never blindly roll back the database or remove its volume.
 - Keep the previous release/image until the next release is verified. Review disk usage and snapshot storage regularly.
 - Budget target approximately $35/month before taxes, not a hard cap. No load balancer, RDS, managed Redis or paid CDN is provisioned by this deployment. The domain remains externally managed, without Route 53 charges.
-- Budget `magaram-lightsail-mumbai` monitors Mumbai Lightsail costs against $35/month, with 80% and 100% email alerts to `magaram.in@gmail.com`. It does not monitor unrelated AWS services or prevent spending.
+- Budget `magaram-lightsail-mumbai` monitors Mumbai Lightsail costs against $35/month, with 80% and 100% email alerts intended for `admin@magarammedia.in`. It does not monitor unrelated AWS services or prevent spending.
 - Single-server failure can cause downtime. Provider integrations, full CMS acceptance, backup restoration rehearsal and load testing remain outstanding.
 
 ## Verification

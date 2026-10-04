@@ -46,7 +46,7 @@ describe('Amazon integrations', () => {
 
   it('sends a one-recipient SES reset message without exposing the token to the API', async () => {
     const send = vi.fn().mockResolvedValue({ $metadata: {} });
-    const delivery = new SesPasswordResetDelivery('magaram.in@gmail.com', 'https://65.2.18.204', {
+    const delivery = new SesPasswordResetDelivery('admin@magarammedia.in', 'https://65.2.18.204', {
       send,
     });
     await delivery.deliver({
@@ -56,7 +56,7 @@ describe('Amazon integrations', () => {
     });
     const command = send.mock.calls[0][0] as SendEmailCommand;
     expect(command.input).toMatchObject({
-      FromEmailAddress: 'magaram.in@gmail.com',
+      FromEmailAddress: 'admin@magarammedia.in',
       Destination: { ToAddresses: ['editor@example.test'] },
     });
     const body = command.input.Content?.Simple?.Body?.Text?.Data || '';

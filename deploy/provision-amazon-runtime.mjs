@@ -39,7 +39,7 @@ const policy = {
       Sid: 'SendOnlyFromApprovedMagaramAddress',
       Effect: 'Allow',
       Action: ['ses:SendEmail'],
-      Resource: `arn:aws:ses:${region}:${account}:identity/magaram.in@gmail.com`,
+      Resource: `arn:aws:ses:${region}:${account}:identity/admin@magarammedia.in`,
     },
   ],
 };
