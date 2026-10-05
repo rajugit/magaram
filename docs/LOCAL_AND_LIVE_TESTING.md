@@ -29,6 +29,8 @@ node scripts/system-smoke.mjs https://magarammedia.in
 
 For authorized authenticated acceptance, run `deploy/smoke.mjs <expected-full-commit-sha>` as root on the existing server, or inside its release image with the existing root-only environment directory mounted read-only. That script reads credentials on the server, tests secure cookies, permissions, provider state and logout without printing credentials or data. Do not copy the server bootstrap secret to the local machine or into chat.
 
+The live reset-page Playwright checks use `pnpm test:e2e`. The form-only check is safe to run against production. Run the delivery acceptance only after a real provider is configured: `PLAYWRIGHT_EMAIL_ACCEPTANCE=1 pnpm test:e2e -- tests/e2e/password-reset.spec.ts`. It uses `qa-reset@example.test`, never real credentials, and asserts that no token appears in the page.
+
 A release passes only if the installed `/version` matches the intended commit and all required checks pass. The current live version may legitimately lack new routes before deployment; report those as missing, not as passing. Do not run destructive database integration or load tests against the live site.
 
 ## Browser acceptance

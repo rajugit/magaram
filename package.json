@@ -16,6 +16,7 @@
     "dev": "pnpm --parallel --filter @magaram/web --filter @magaram/api --filter @magaram/worker dev",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",
+    "test:e2e": "playwright test",
     "test:integration": "node --env-file=.env scripts/test-integration.mjs",
     "typecheck": "pnpm -r --if-present typecheck",
     "db:validate": "pnpm --filter @magaram/api db:validate",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.63.0",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.5.0",
