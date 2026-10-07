@@ -156,8 +156,10 @@ export function createWorkspaceSmtpPasswordResetDelivery(input: {
   const transport = nodemailer.createTransport({
     host: input.host,
     port: input.port,
-    secure: false,
-    requireTLS: true,
+    // Port 465 uses implicit TLS; port 587 upgrades an initially plain
+    // connection with STARTTLS.
+    secure: input.port === 465,
+    requireTLS: input.port !== 465,
     auth:
       input.username && input.password ? { user: input.username, pass: input.password } : undefined,
   });

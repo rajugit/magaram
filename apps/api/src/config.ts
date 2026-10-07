@@ -26,7 +26,7 @@ const environmentSchema = z
     EMAIL_PROVIDER: z.enum(['inactive', 'ses', 'workspace_smtp']).default('inactive'),
     SES_FROM_EMAIL: z.string().trim().email().max(320).optional(),
     WORKSPACE_SMTP_HOST: z.string().trim().min(1).max(255).default('smtp-relay.gmail.com'),
-    WORKSPACE_SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+    WORKSPACE_SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(465),
     WORKSPACE_SMTP_FROM_EMAIL: z.string().trim().email().max(320).optional(),
     WORKSPACE_SMTP_USERNAME: z.string().trim().min(1).max(320).optional(),
     WORKSPACE_SMTP_PASSWORD: z.string().min(1).max(500).optional(),

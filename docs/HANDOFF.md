@@ -31,7 +31,7 @@ Remaining phases and provider integrations are not complete. Actual production s
 
 ## SMTP decision — 2026-10-07
 
-The requested reset-delivery provider is Google Workspace mailbox SMTP for `admin@magarammedia.in`. The documented host is `smtp.gmail.com:587` with TLS and a server-only Google app password. The IP-allowlisted relay alternative remains `smtp-relay.gmail.com:587`. No mailbox password or app password is stored in the repository. Production activation and live delivery verification remain pending until the server can be reached and the owner supplies the credential through a secure server-side entry.
+The requested reset-delivery provider is Google Workspace mailbox SMTP for `admin@magarammedia.in`. The documented host is `smtp.gmail.com:465` with implicit TLS and a server-only Google app password. Port `587` with STARTTLS remains supported; the IP-allowlisted relay alternative is `smtp-relay.gmail.com:587`. No mailbox password or app password is stored in the repository. Production activation and live delivery verification remain pending until the server can be reached and the owner supplies the credential through a secure server-side entry.
 
 ## Account-connection review — 2026-09-25
 

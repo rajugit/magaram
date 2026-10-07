@@ -4,7 +4,7 @@ The application supports `EMAIL_PROVIDER=workspace_smtp`. It remains disabled by
 
 Recommended Google Admin configuration:
 
-For mailbox SMTP, use `smtp.gmail.com` on port `587`, require TLS, and authenticate as `admin@magarammedia.in` with a Google app password. Do not use the normal Google password.
+For mailbox SMTP, use `smtp.gmail.com` on port `465` with implicit TLS, and authenticate as `admin@magarammedia.in` with a Google app password. Do not use the normal Google password. Port `587` remains supported with STARTTLS.
 
 For an IP-allowlisted Workspace relay, use `smtp-relay.gmail.com` on port `587`, configure the relay in Admin Console, and omit mailbox credentials.
 
@@ -13,7 +13,7 @@ Server-only settings, stored in the root-owned runtime secret file, are:
 ```text
 EMAIL_PROVIDER=workspace_smtp
 WORKSPACE_SMTP_HOST=smtp.gmail.com
-WORKSPACE_SMTP_PORT=587
+WORKSPACE_SMTP_PORT=465
 WORKSPACE_SMTP_FROM_EMAIL=admin@magarammedia.in
 WORKSPACE_SMTP_USERNAME=admin@magarammedia.in
 WORKSPACE_SMTP_PASSWORD=<server-only Google app password>
