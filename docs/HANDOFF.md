@@ -29,6 +29,10 @@ The additive marketplace migration `202609260001_marketplace` was applied in the
 
 Remaining phases and provider integrations are not complete. Actual production sign-off, live payment/email/social delivery and broader editorial/accessibility/restore acceptance remain separate gates.
 
+## SMTP decision — 2026-10-07
+
+The requested reset-delivery provider is Google Workspace mailbox SMTP for `admin@magarammedia.in`. The documented host is `smtp.gmail.com:587` with TLS and a server-only Google app password. The IP-allowlisted relay alternative remains `smtp-relay.gmail.com:587`. No mailbox password or app password is stored in the repository. Production activation and live delivery verification remain pending until the server can be reached and the owner supplies the credential through a secure server-side entry.
+
 ## Account-connection review — 2026-09-25
 
 The user requested a secure browser/account review after deployment. See `ACCOUNT_CONNECTIONS.md`. YouTube website link was saved; Instagram now shows `www.magarammedia.in` in its Website field. AWS root MFA, firewall, snapshot status and root-only secret-file permissions were checked without secret values. SES sender verification reports `SUCCESS`, but the account remains in sandbox. Google Workspace confirms `magarammedia.in` verified and Gmail activated for `admin@magarammedia.in`; routing settings still require an administrator session. The live provider remains on the existing tested configuration until the Workspace relay is authorized and delivery tests pass. No API publishing credentials were obtained or integrations enabled.
