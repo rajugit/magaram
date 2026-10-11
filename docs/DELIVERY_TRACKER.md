@@ -25,6 +25,10 @@ Each phase requires working persisted workflows, authorization checks, validatio
 | 14 CI/CD                | In progress              | CI checks, dependency audit, builds, isolated integration job, and archive/feed smoke checks added; release/rollback acceptance pending                    |
 | 15 Production readiness | Pending                  | Integrated testing and provider verification                                                                                                               |
 
+### Milestone 1 — AI newsroom source discovery — 2026-10-11
+
+Local implementation is complete for the first AI-news milestone. The exact revision adds the source registry (`NewsSource`), fetch history (`NewsSourceFetch`), and bounded discovered-item store (`DiscoveredNews`), plus RBAC-protected source management and manual-fetch endpoints. The BullMQ worker schedules discovery every five minutes and honors each source's configured interval. RSS/Atom parsing, redirect validation, private-destination blocking, payload limits and deterministic deduplication are covered by focused tests. No article, trend, AI draft or social post is created automatically. MySQL migration, local registration/fetch, worker restart and browser acceptance remain release evidence to collect before this milestone is marked deployed.
+
 ## Current constraints
 
 The production cutover checklist is maintained in `docs/PRODUCTION_READINESS.md`. The preview remains the highest permitted environment until every required gate passes and the owner gives explicit approval.

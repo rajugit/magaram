@@ -210,6 +210,98 @@ model ArticleSource {
   @@index([articleId])
 }
 
+enum NewsSourceType {
+  RSS
+  OFFICIAL
+  GOVERNMENT
+  TRENDS
+  PUBLISHER
+}
+
+enum NewsSourceLanguage {
+  TA
+  EN
+  MIXED
+}
+
+enum NewsGeography {
+  WORLD
+  INDIA
+  TAMIL_NADU
+  CHENNAI
+  DISTRICT
+}
+
+enum NewsDiscoveryStatus {
+  DISCOVERED
+  PENDING_VERIFICATION
+  VERIFIED
+  NEEDS_REVIEW
+  REJECTED
+}
+
+model NewsSource {
+  id                  String             @id @default(cuid())
+  name                String             @db.VarChar(180)
+  url                 String             @unique @db.VarChar(1000)
+  sourceType          NewsSourceType
+  language            NewsSourceLanguage @default(MIXED)
+  geography           NewsGeography
+  category            String             @db.VarChar(100)
+  trustLevel          Int                @default(50)
+  licenseNotes        String?            @db.VarChar(1000)
+  pollingSeconds      Int                @default(900)
+  enabled             Boolean            @default(false)
+  lastSuccessfulFetch DateTime?
+  errorCount          Int                @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  fetches             NewsSourceFetch[]
+  discovered          DiscoveredNews[]
+
+  @@index([enabled, pollingSeconds])
+  @@index([geography, category])
+}
+
+model NewsSourceFetch {
+  id           String     @id @default(cuid())
+  sourceId     String
+  source       NewsSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+  status       String     @db.VarChar(30)
+  httpStatus   Int?
+  itemCount    Int        @default(0)
+  errorCode    String?    @db.VarChar(80)
+  errorMessage String?    @db.VarChar(500)
+
+  @@index([sourceId, startedAt])
+  @@index([status, startedAt])
+}
+
+model DiscoveredNews {
+  id           String              @id @default(cuid())
+  sourceId     String
+  source       NewsSource          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  dedupeKey    String              @unique @db.Char(64)
+  externalId   String?             @db.VarChar(500)
+  canonicalUrl String              @db.VarChar(1000)
+  title        String              @db.VarChar(500)
+  summary      String?             @db.Text
+  publishedAt  DateTime?
+  language     NewsSourceLanguage
+  geography    NewsGeography
+  category     String              @db.VarChar(100)
+  status       NewsDiscoveryStatus @default(DISCOVERED)
+  rawPayload   Json
+  discoveredAt DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([sourceId, canonicalUrl])
+  @@index([status, publishedAt])
+  @@index([geography, category, discoveredAt])
+}
+
 model ArticleClaim {
   id String @id @default(cuid())
   articleId String

@@ -7,6 +7,10 @@
     "./maintenance": {
       "types": "./dist/maintenance.d.ts",
       "default": "./dist/maintenance.js"
+    },
+    "./news-discovery": {
+      "types": "./src/news-discovery.ts",
+      "default": "./dist/news-discovery.js"
     }
   },
   "scripts": {

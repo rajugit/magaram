@@ -1,0 +1,61 @@
+CREATE TABLE `NewsSource` (
+  `id` varchar(191) NOT NULL,
+  `name` varchar(180) NOT NULL,
+  `url` varchar(1000) NOT NULL,
+  `sourceType` enum('RSS','OFFICIAL','GOVERNMENT','TRENDS','PUBLISHER') NOT NULL,
+  `language` enum('TA','EN','MIXED') NOT NULL DEFAULT 'MIXED',
+  `geography` enum('WORLD','INDIA','TAMIL_NADU','CHENNAI','DISTRICT') NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `trustLevel` int NOT NULL DEFAULT 50,
+  `licenseNotes` varchar(1000) NULL,
+  `pollingSeconds` int NOT NULL DEFAULT 900,
+  `enabled` boolean NOT NULL DEFAULT false,
+  `lastSuccessfulFetch` datetime(3) NULL,
+  `errorCount` int NOT NULL DEFAULT 0,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `NewsSource_url_key` (`url`),
+  KEY `NewsSource_enabled_pollingSeconds_idx` (`enabled`,`pollingSeconds`),
+  KEY `NewsSource_geography_category_idx` (`geography`,`category`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE `NewsSourceFetch` (
+  `id` varchar(191) NOT NULL,
+  `sourceId` varchar(191) NOT NULL,
+  `startedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `completedAt` datetime(3) NULL,
+  `status` varchar(30) NOT NULL,
+  `httpStatus` int NULL,
+  `itemCount` int NOT NULL DEFAULT 0,
+  `errorCode` varchar(80) NULL,
+  `errorMessage` varchar(500) NULL,
+  PRIMARY KEY (`id`),
+  KEY `NewsSourceFetch_sourceId_startedAt_idx` (`sourceId`,`startedAt`),
+  KEY `NewsSourceFetch_status_startedAt_idx` (`status`,`startedAt`),
+  CONSTRAINT `NewsSourceFetch_sourceId_fkey` FOREIGN KEY (`sourceId`) REFERENCES `NewsSource` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE `DiscoveredNews` (
+  `id` varchar(191) NOT NULL,
+  `sourceId` varchar(191) NOT NULL,
+  `dedupeKey` char(64) NOT NULL,
+  `externalId` varchar(500) NULL,
+  `canonicalUrl` varchar(1000) NOT NULL,
+  `title` varchar(500) NOT NULL,
+  `summary` text NULL,
+  `publishedAt` datetime(3) NULL,
+  `language` enum('TA','EN','MIXED') NOT NULL,
+  `geography` enum('WORLD','INDIA','TAMIL_NADU','CHENNAI','DISTRICT') NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `status` enum('DISCOVERED','PENDING_VERIFICATION','VERIFIED','NEEDS_REVIEW','REJECTED') NOT NULL DEFAULT 'DISCOVERED',
+  `rawPayload` json NOT NULL,
+  `discoveredAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `DiscoveredNews_dedupeKey_key` (`dedupeKey`),
+  UNIQUE KEY `DiscoveredNews_sourceId_canonicalUrl_key` (`sourceId`,`canonicalUrl`),
+  KEY `DiscoveredNews_status_publishedAt_idx` (`status`,`publishedAt`),
+  KEY `DiscoveredNews_geography_category_discoveredAt_idx` (`geography`,`category`,`discoveredAt`),
+  CONSTRAINT `DiscoveredNews_sourceId_fkey` FOREIGN KEY (`sourceId`) REFERENCES `NewsSource` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

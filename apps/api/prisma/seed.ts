@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 const permissions = [
   { code: '*', description: 'Full platform access; assign only to SUPER_ADMIN.' },
   { code: 'settings:read', description: 'View non-secret platform configuration.' },
+  { code: 'news:sources:manage', description: 'Manage authorized news sources and ingestion.' },
   { code: 'audit:read', description: 'View governance audit records.' },
   { code: 'articles:draft', description: 'Create and edit article drafts.' },
   { code: 'articles:review', description: 'Review editorial content.' },
@@ -24,7 +25,11 @@ const permissions = [
 
 const roles = [
   { code: 'SUPER_ADMIN', name: 'Super administrator', permissions: ['*'] },
-  { code: 'ADMIN', name: 'Administrator', permissions: ['settings:read', 'audit:read'] },
+  {
+    code: 'ADMIN',
+    name: 'Administrator',
+    permissions: ['settings:read', 'news:sources:manage', 'audit:read'],
+  },
   {
     code: 'EDITOR',
     name: 'Editor',

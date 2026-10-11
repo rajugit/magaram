@@ -2,6 +2,7 @@ import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { z } from 'zod';
 import { PrismaClient, handleMaintenanceJob } from '@magaram/api/maintenance';
+import { ingestNewsSource } from '@magaram/api/news-discovery';
 
 const environmentSchema = z.object({
   REDIS_URL: z.string().url(),
@@ -31,10 +32,45 @@ const worker = new Worker(
   },
   { connection },
 );
+const discoveryQueue = new Queue('news-discovery', {
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
+    removeOnComplete: { age: 604800, count: 1000 },
+    removeOnFail: { age: 2592000, count: 5000 },
+  },
+});
+const discoveryWorker = new Worker(
+  'news-discovery',
+  async () => {
+    const sources = await db.newsSource.findMany({ where: { enabled: true } });
+    const due = sources.filter(
+      (source) =>
+        !source.lastSuccessfulFetch ||
+        source.lastSuccessfulFetch.getTime() + source.pollingSeconds * 1000 <= Date.now(),
+    );
+    const results = [];
+    for (const source of due) {
+      try {
+        results.push({ sourceId: source.id, ...(await ingestNewsSource(db, source)) });
+      } catch {
+        results.push({ sourceId: source.id, failed: true });
+      }
+    }
+    return { checked: sources.length, due: due.length, results };
+  },
+  { connection, concurrency: 1 },
+);
 await queue.upsertJobScheduler(
   'identity-retention-v1',
   { every: 3600000 },
   { name: 'expired-session-cleanup', data: {} },
+);
+await discoveryQueue.upsertJobScheduler(
+  'news-source-poll-v1',
+  { every: 300_000 },
+  { name: 'news-source-poll', data: {} },
 );
 await queue.upsertJobScheduler(
   'editorial-publication-v1',
@@ -61,6 +97,9 @@ worker.on('failed', (job) => {
     }),
   );
 });
+discoveryWorker.on('error', () =>
+  console.error(JSON.stringify({ level: 'error', message: 'News discovery worker error' })),
+);
 
 let stopping = false;
 async function shutdown(signal: string) {
@@ -68,7 +107,9 @@ async function shutdown(signal: string) {
   stopping = true;
   console.info(JSON.stringify({ level: 'info', message: 'Worker stopping', signal }));
   await worker.close();
+  await discoveryWorker.close();
   await queue.close();
+  await discoveryQueue.close();
   await connection.quit();
   await db.$disconnect();
   process.exit(0);
