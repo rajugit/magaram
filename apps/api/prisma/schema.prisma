@@ -243,7 +243,7 @@ enum NewsDiscoveryStatus {
 model NewsSource {
   id                  String             @id @default(cuid())
   name                String             @db.VarChar(180)
-  url                 String             @unique @db.VarChar(1000)
+  url                 String             @unique @db.VarChar(700)
   sourceType          NewsSourceType
   language            NewsSourceLanguage @default(MIXED)
   geography           NewsGeography
@@ -297,7 +297,6 @@ model DiscoveredNews {
   discoveredAt DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
-  @@unique([sourceId, canonicalUrl])
   @@index([status, publishedAt])
   @@index([geography, category, discoveredAt])
 }

@@ -1,7 +1,7 @@
 CREATE TABLE `NewsSource` (
   `id` varchar(191) NOT NULL,
   `name` varchar(180) NOT NULL,
-  `url` varchar(1000) NOT NULL,
+  `url` varchar(700) NOT NULL,
   `sourceType` enum('RSS','OFFICIAL','GOVERNMENT','TRENDS','PUBLISHER') NOT NULL,
   `language` enum('TA','EN','MIXED') NOT NULL DEFAULT 'MIXED',
   `geography` enum('WORLD','INDIA','TAMIL_NADU','CHENNAI','DISTRICT') NOT NULL,
@@ -54,7 +54,6 @@ CREATE TABLE `DiscoveredNews` (
   `updatedAt` datetime(3) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `DiscoveredNews_dedupeKey_key` (`dedupeKey`),
-  UNIQUE KEY `DiscoveredNews_sourceId_canonicalUrl_key` (`sourceId`,`canonicalUrl`),
   KEY `DiscoveredNews_status_publishedAt_idx` (`status`,`publishedAt`),
   KEY `DiscoveredNews_geography_category_discoveredAt_idx` (`geography`,`category`,`discoveredAt`),
   CONSTRAINT `DiscoveredNews_sourceId_fkey` FOREIGN KEY (`sourceId`) REFERENCES `NewsSource` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
