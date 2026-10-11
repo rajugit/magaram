@@ -39,8 +39,11 @@ The application currently uses a unique email address as the login identifier an
 After deploying the migration, an operator with SSH access must run the interactive command below from the release directory. The operator types the temporary password directly into the prompt; it is never placed in shell history, source control, logs or chat:
 
 ```bash
-cd /opt/magaram/current
-sudo -u root env SUPER_ADMIN_USERNAME=magarammedia pnpm --filter @magaram/api db:set-super-admin-password
+sudo docker run --rm -it --network host \
+  --env-file /etc/magaram/runtime.env \
+  -e SUPER_ADMIN_USERNAME=magarammedia \
+  -w /app/apps/api magaram:5703aee614c3e1c7745edb8bad6e252fd10a5b5c \
+  node --import tsx prisma/set-super-admin-password.ts
 ```
 
 The command sets the password and marks the account for a mandatory change after first sign-in. The super administrator should then sign in at `/login` using `magarammedia`, change the password under Account security, and use Team accounts to create editor accounts.
