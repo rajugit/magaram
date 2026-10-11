@@ -31,6 +31,7 @@ enum AppRole {
 
 model User {
   id              String      @id @default(cuid())
+  username        String?     @unique @db.VarChar(80)
   email           String      @unique @db.VarChar(320)
   displayName     String      @db.VarChar(160)
   passwordHash    String      @db.VarChar(255)
@@ -39,6 +40,7 @@ model User {
   lockedUntil     DateTime?
   lastLoginAt     DateTime?
   passwordChangedAt DateTime  @default(now())
+  mustChangePassword Boolean   @default(false)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   deletedAt       DateTime?

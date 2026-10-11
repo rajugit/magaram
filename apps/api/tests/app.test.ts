@@ -5,13 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import type { AppConfig } from '../src/config.js';
 import type { AuditEvent } from '../src/audit.js';
-import type {
-  IdentityRepository,
-  PasswordResetDelivery,
-  StoredPasswordReset,
-  StoredSession,
-  StoredUser,
-} from '../src/identity.js';
+import type { IdentityRepository, StoredPasswordReset, StoredSession, StoredUser } from '../src/identity.js';
 
 class MemoryIdentityRepository implements IdentityRepository {
   readonly events: AuditEvent[] = [];
@@ -277,50 +271,18 @@ describe('foundation API', () => {
       .expect(401);
   });
 
-  it('resets a password through the injected delivery channel without exposing its token', async () => {
-    const resetDelivery = new CapturingPasswordResetDelivery();
-    const app = createApp({
-      config,
-      identityRepository: await testRepository(),
-      passwordResetDelivery: resetDelivery,
-    });
+  it('directs password reset requests to the super administrator', async () => {
+    const app = createApp({ config, identityRepository: await testRepository() });
     const client = request.agent(app);
     const csrf = await client.get('/api/v1/auth/csrf');
 
-    const requestReset = await client
+    await client
       .post('/api/v1/auth/password-reset/request')
       .set('x-csrf-token', csrf.body.data.token)
       .send({ email: 'editor@magaram.test' })
-      .expect(200);
-    expect(requestReset.body.data).not.toHaveProperty('token');
-    expect(resetDelivery.token).toBeDefined();
-
-    await client
-      .post('/api/v1/auth/password-reset/confirm')
-      .set('x-csrf-token', csrf.body.data.token)
-      .send({ token: resetDelivery.token, password: 'new-correct-horse-battery-staple' })
-      .expect(200);
-
-    await client
-      .post('/api/v1/auth/login')
-      .set('x-csrf-token', csrf.body.data.token)
-      .send({ email: 'editor@magaram.test', password: 'correct-horse-battery-staple' })
-      .expect(401);
-    await client
-      .post('/api/v1/auth/login')
-      .set('x-csrf-token', csrf.body.data.token)
-      .send({ email: 'editor@magaram.test', password: 'new-correct-horse-battery-staple' })
-      .expect(200);
+      .expect(410);
   });
 });
-
-class CapturingPasswordResetDelivery implements PasswordResetDelivery {
-  token?: string;
-
-  async deliver({ token }: { recipient: string; token: string; expiresAt: Date }): Promise<void> {
-    this.token = token;
-  }
-}
 
 async function testRepository(
   permissions = ['articles:review'],

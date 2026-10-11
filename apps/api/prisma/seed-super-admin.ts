@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
 const environmentSchema = z.object({
+  SUPER_ADMIN_USERNAME: z.string().trim().min(3).max(80).regex(/^[a-zA-Z0-9._-]+$/).default('magarammedia'),
   SUPER_ADMIN_EMAIL: z.string().trim().email().max(320),
   SUPER_ADMIN_PASSWORD: z.string().min(16).max(256),
   SUPER_ADMIN_NAME: z.string().trim().min(2).max(160).default('Magaram Super Admin'),
@@ -28,9 +29,11 @@ async function bootstrapSuperAdmin() {
   const passwordHash = await bcrypt.hash(environment.SUPER_ADMIN_PASSWORD, 12);
   await prisma.user.create({
     data: {
+      username: environment.SUPER_ADMIN_USERNAME.toLowerCase(),
       email,
       displayName: environment.SUPER_ADMIN_NAME,
       passwordHash,
+      mustChangePassword: true,
       roles: { create: { roleId: role.id } },
     },
   });

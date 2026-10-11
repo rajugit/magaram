@@ -7,6 +7,7 @@ const permissions = [
   { code: 'settings:read', description: 'View non-secret platform configuration.' },
   { code: 'news:sources:manage', description: 'Manage authorized news sources and ingestion.' },
   { code: 'audit:read', description: 'View governance audit records.' },
+  { code: 'users:manage', description: 'Create and manage newsroom user accounts.' },
   { code: 'articles:draft', description: 'Create and edit article drafts.' },
   { code: 'articles:review', description: 'Review editorial content.' },
   { code: 'articles:fact-check', description: 'Record fact-check assessments.' },

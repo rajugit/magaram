@@ -8,11 +8,13 @@ import type { AuditRecorder } from './audit.js';
 
 export interface AuthenticatedUser {
   id: string;
+  username?: string | null;
   email: string;
   displayName: string;
   status: UserStatus;
   roles: AppRole[];
   permissions: string[];
+  mustChangePassword?: boolean;
 }
 
 export interface StoredUser extends AuthenticatedUser {
@@ -47,6 +49,7 @@ export class NoopPasswordResetDelivery implements PasswordResetDelivery {
 
 export interface IdentityRepository extends AuditRecorder {
   findUserByEmail(email: string): Promise<StoredUser | null>;
+  findUserByUsername?(username: string): Promise<StoredUser | null>;
   findSessionByTokenHash(tokenHash: string): Promise<StoredSession | null>;
   createSession(input: { userId: string; tokenHash: string; expiresAt: Date }): Promise<void>;
   revokeSession(tokenHash: string): Promise<void>;
@@ -107,11 +110,16 @@ export class AuthService {
   ) {}
 
   async login(
-    email: string,
+    identifier: string,
     password: string,
     requestId?: string,
   ): Promise<{ user: AuthenticatedUser; token: string }> {
-    const user = await this.repository.findUserByEmail(email.toLowerCase());
+    const normalized = identifier.trim().toLowerCase();
+    const user = normalized.includes('@')
+      ? await this.repository.findUserByEmail(normalized)
+      : this.repository.findUserByUsername
+        ? await this.repository.findUserByUsername(normalized)
+        : null;
     const passwordMatches = await this.passwords.verify(
       password,
       user?.passwordHash ?? this.dummyHash,
@@ -126,7 +134,7 @@ export class AuthService {
         action: 'auth.login.failed',
         entityType: 'User',
         requestId,
-        metadata: { email },
+        metadata: { identifier },
       });
       throw new Error('INVALID_CREDENTIALS');
     }

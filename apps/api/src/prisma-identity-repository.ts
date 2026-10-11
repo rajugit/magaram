@@ -25,12 +25,14 @@ const userInclude = {
 
 type PrismaUser = {
   id: string;
+  username: string | null;
   email: string;
   displayName: string;
   passwordHash: string;
   status: 'ACTIVE' | 'LOCKED' | 'DISABLED';
   failedLoginAttempts: number;
   lockedUntil: Date | null;
+  mustChangePassword: boolean;
   roles: Array<{
     role: {
       code: AuthenticatedUser['roles'][number];
@@ -49,6 +51,7 @@ function mapUser(user: PrismaUser): StoredUser {
 
   return {
     id: user.id,
+    username: user.username,
     email: user.email,
     displayName: user.displayName,
     passwordHash: user.passwordHash,
@@ -57,6 +60,7 @@ function mapUser(user: PrismaUser): StoredUser {
     lockedUntil: user.lockedUntil,
     roles,
     permissions,
+    mustChangePassword: user.mustChangePassword,
   };
 }
 
@@ -66,6 +70,14 @@ export class PrismaIdentityRepository implements IdentityRepository {
   async findUserByEmail(email: string): Promise<StoredUser | null> {
     const user = await this.prisma.user.findFirst({
       where: { email, deletedAt: null },
+      include: userInclude,
+    });
+    return user ? mapUser(user) : null;
+  }
+
+  async findUserByUsername(username: string): Promise<StoredUser | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { username, deletedAt: null },
       include: userInclude,
     });
     return user ? mapUser(user) : null;
@@ -167,6 +179,7 @@ export class PrismaIdentityRepository implements IdentityRepository {
         data: {
           passwordHash: input.passwordHash,
           passwordChangedAt: now,
+          mustChangePassword: false,
           failedLoginAttempts: 0,
           lockedUntil: null,
         },

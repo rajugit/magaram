@@ -27,24 +27,17 @@ import { advertisingRouter } from './advertising.js';
 import { localRouter } from './local.js';
 import { marketplaceRouter } from './marketplace.js';
 import { newsSourcesRouter } from './news-sources.js';
+import { adminAccountsRouter } from './admin-accounts.js';
 
 const SESSION_COOKIE = 'magaram_session';
 const CSRF_COOKIE = 'magaram_csrf';
 const sessionDurationMs = 12 * 60 * 60 * 1_000;
 
 const loginSchema = z.object({
-  email: z.string().trim().email().max(320),
+  identifier: z.string().trim().min(3).max(320).optional(),
+  email: z.string().trim().min(3).max(320).optional(),
   password: z.string().min(12).max(256),
-});
-
-const passwordResetRequestSchema = z.object({
-  email: z.string().trim().email().max(320),
-});
-
-const passwordResetConfirmSchema = z.object({
-  token: z.string().min(32).max(128),
-  password: z.string().min(12).max(256),
-});
+}).refine((value) => Boolean(value.identifier || value.email), 'Username or email is required.');
 
 export interface AppDependencies {
   config: AppConfig;
@@ -234,6 +227,22 @@ export function createApp(dependencies: AppDependencies): Express {
       if (session) {
         request.auth = session.user;
       }
+      if (
+        request.auth?.mustChangePassword &&
+        ![
+          '/auth/csrf',
+          '/auth/login',
+          '/auth/logout',
+          '/auth/password-change',
+          '/me',
+        ].includes(request.path)
+      ) {
+        throw new ApiError(
+          403,
+          'PASSWORD_CHANGE_REQUIRED',
+          'Change your temporary password before using the newsroom.',
+        );
+      }
       next();
     }),
   );
@@ -276,7 +285,7 @@ export function createApp(dependencies: AppDependencies): Express {
 
       try {
         const result = await authentication.login(
-          parsed.data.email,
+          parsed.data.identifier ?? parsed.data.email!,
           parsed.data.password,
           response.locals.requestId,
         );
@@ -291,46 +300,12 @@ export function createApp(dependencies: AppDependencies): Express {
     }),
   );
 
-  app.post(
-    '/api/v1/auth/password-reset/request',
-    csrfProtection(tokens),
-    asyncRoute(async (request, response) => {
-      const parsed = passwordResetRequestSchema.safeParse(request.body);
-      if (!parsed.success) {
-        throw new ApiError(422, 'VALIDATION_ERROR', 'Invalid request.', parsed.error.issues);
-      }
-      await authentication.requestPasswordReset(parsed.data.email, response.locals.requestId);
-      return sendSuccess(
-        response,
-        {},
-        'If the account exists, password reset instructions have been sent.',
-      );
-    }),
-  );
-
-  app.post(
-    '/api/v1/auth/password-reset/confirm',
-    csrfProtection(tokens),
-    asyncRoute(async (request, response) => {
-      const parsed = passwordResetConfirmSchema.safeParse(request.body);
-      if (!parsed.success) {
-        throw new ApiError(422, 'VALIDATION_ERROR', 'Invalid request.', parsed.error.issues);
-      }
-      try {
-        await authentication.completePasswordReset(
-          parsed.data.token,
-          parsed.data.password,
-          response.locals.requestId,
-        );
-      } catch (error) {
-        if (error instanceof Error && error.message === 'INVALID_RESET_TOKEN') {
-          throw new ApiError(400, 'INVALID_RESET_TOKEN', 'The reset token is invalid or expired.');
-        }
-        throw error;
-      }
-      return sendSuccess(response, {}, 'Password updated successfully.');
-    }),
-  );
+  app.post('/api/v1/auth/password-reset/request', () => {
+    throw new ApiError(410, 'PASSWORD_RESET_DISABLED', 'Contact a super administrator to change your password.');
+  });
+  app.post('/api/v1/auth/password-reset/confirm', () => {
+    throw new ApiError(410, 'PASSWORD_RESET_DISABLED', 'Contact a super administrator to change your password.');
+  });
 
   app.post(
     '/api/v1/auth/logout',
@@ -417,6 +392,7 @@ export function createApp(dependencies: AppDependencies): Express {
   if (dependencies.db) app.use('/api/v1', localRouter(dependencies.db, csrfProtection(tokens)));
   if (dependencies.db) app.use('/api/v1', marketplaceRouter(dependencies.db, csrfProtection(tokens)));
   if (dependencies.db) app.use('/api/v1', newsSourcesRouter(dependencies.db, csrfProtection(tokens)));
+  if (dependencies.db) app.use('/api/v1', adminAccountsRouter(dependencies.db, csrfProtection(tokens)));
 
   app.use((_request, _response, next) => {
     next(new ApiError(404, 'NOT_FOUND', 'The requested resource was not found.'));
@@ -428,17 +404,21 @@ export function createApp(dependencies: AppDependencies): Express {
 
 function presentUser(user: {
   id: string;
+  username?: string | null;
   email: string;
   displayName: string;
   roles: string[];
   permissions: string[];
+  mustChangePassword?: boolean;
 }) {
   return {
     id: user.id,
     email: user.email,
+    username: user.username ?? null,
     displayName: user.displayName,
     roles: user.roles,
     permissions: user.permissions,
+    mustChangePassword: user.mustChangePassword ?? false,
   };
 }
 

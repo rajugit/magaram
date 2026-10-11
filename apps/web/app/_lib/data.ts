@@ -154,6 +154,7 @@ export const navGroups = [
       ['Settings', '/admin/settings', 'settings'],
       ['Audit trail', '/admin/audit', 'shield'],
       ['Taxonomy', '/admin/taxonomy', 'grid'],
+      ['Team accounts', '/admin/users', 'users'],
       ['Phase previews', '/preview', 'grid'],
     ],
   },

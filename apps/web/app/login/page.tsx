@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Brand, Icon } from '../_components/brand';
 import { api } from '../_lib/api';
-import { contactEmail } from '../_lib/data';
 
 export default function Login() {
   const router = useRouter();
@@ -37,12 +36,12 @@ export default function Login() {
               setError('');
               const f = new FormData(e.currentTarget);
               try {
-                await api('/auth/login', {
+                const result = await api<{ user: { mustChangePassword?: boolean } }>('/auth/login', {
                   method: 'POST',
                   body: JSON.stringify(Object.fromEntries(f)),
                 });
                 sessionStorage.removeItem('magaram-preview');
-                router.push('/admin');
+                router.push(result.user.mustChangePassword ? '/admin/account' : '/admin');
               } catch (e) {
                 setError((e as Error).message);
               } finally {
@@ -51,11 +50,10 @@ export default function Login() {
             }}
           >
             <label>
-              Email address
+              Username or email
               <input
-                name="email"
-                type="email"
-                defaultValue={contactEmail}
+                name="identifier"
+                type="text"
                 autoComplete="username"
                 required
               />
@@ -81,7 +79,7 @@ export default function Login() {
             </button>
           </form>
           <Link href="/reset-password" className="back-link">
-            Forgot your password?
+            Contact an administrator to change your password
           </Link>
           <div className="divider">or explore the design</div>
           <button

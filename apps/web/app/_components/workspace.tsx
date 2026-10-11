@@ -13,6 +13,7 @@ import { AccountSecurity } from './account-security';
 import { EditorialReview } from './editorial-review';
 import { AiWorkbench } from './ai-workbench';
 import { Taxonomy } from './taxonomy';
+import { TeamAccounts } from './team-accounts';
 import type { TaxonomyItem } from './taxonomy';
 
 const labels: Record<string, string> = {
@@ -47,6 +48,7 @@ export function Workspace({
   const [demo, setDemo] = useState(initialPreview);
   const [ready, setReady] = useState(initialPreview);
   const [user, setUser] = useState(initialPreview ? 'Preview editor' : '');
+  const [permissions, setPermissions] = useState<string[]>(initialPreview ? ['*'] : []);
   const [articles, setArticles] = useState<Article[]>(initialPreview ? demoArticles : []);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -67,10 +69,11 @@ export function Workspace({
       setReady(true);
       return;
     }
-    api<{ user: { displayName: string; permissions: string[] } }>('/me')
+    api<{ user: { displayName: string; permissions: string[]; mustChangePassword?: boolean } }>('/me')
       .then(async (me) => {
         if (!active) return;
         setUser(me.user.displayName);
+        setPermissions(me.user.permissions);
         if (
           !me.user.permissions.some((p) =>
             ['*', 'articles:draft', 'articles:review', 'articles:fact-check'].includes(p),
@@ -454,6 +457,7 @@ export function Workspace({
               {page === 'campaigns' && <AdvertisingWorkbench demo={demo} />}
               {page === 'businesses' && <LocalWorkbench demo={demo} />}
               {page === 'taxonomy' && <Taxonomy demo={demo} />}
+              {page === 'users' && <TeamAccounts demo={demo} canManage={permissions.includes('*') || permissions.includes('users:manage')} />}
               {![
                 'overview',
                 'articles',
@@ -466,6 +470,7 @@ export function Workspace({
                 'taxonomy',
                 'businesses',
                 'campaigns',
+                'users',
               ].includes(page) && (
                 <section className="panel empty-state">
                   <Icon name={page === 'ai' ? 'spark' : 'clock'} size={40} />
