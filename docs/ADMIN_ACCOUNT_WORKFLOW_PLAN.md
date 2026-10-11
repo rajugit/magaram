@@ -28,7 +28,19 @@ The application currently uses a unique email address as the login identifier an
 - Login, lockout, CSRF, audit, session-revocation and authorization tests pass locally and in the live smoke suite.
 - The supplied initial password is treated as a secret and rotated after first use.
 
-## Decisions pending
+## Confirmed decisions
 
-- Login identifier and retained contact-email policy.
-- Temporary versus permanent initial password policy.
+- Users sign in with a normalized username such as `magarammedia`; the email remains a private contact address.
+- The supplied initial credential is temporary. A first-login password change is required.
+- Public password reset is disabled. Users contact `admin@magarammedia.in`.
+
+## Secure production bootstrap
+
+After deploying the migration, an operator with SSH access must run the interactive command below from the release directory. The operator types the temporary password directly into the prompt; it is never placed in shell history, source control, logs or chat:
+
+```bash
+cd /opt/magaram/current
+sudo -u root env SUPER_ADMIN_USERNAME=magarammedia pnpm --filter @magaram/api db:set-super-admin-password
+```
+
+The command sets the password and marks the account for a mandatory change after first sign-in. The super administrator should then sign in at `/login` using `magarammedia`, change the password under Account security, and use Team accounts to create editor accounts.
