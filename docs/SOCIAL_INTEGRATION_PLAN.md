@@ -11,7 +11,7 @@ The current Chrome profile has signed-in pages for Facebook, Instagram profile `
 | Facebook Page | Meta Graph API OAuth | Page publishing and Page read permissions, approved for the selected Page | Provider adapter inactive |
 | Instagram | Instagram Graph API | Professional account linked to a Facebook Page; content publishing permission; public media URL | Provider adapter inactive |
 | X | X API OAuth 2.0 PKCE | Developer project with write access and user authorization | Provider adapter inactive |
-| YouTube | YouTube Data API OAuth | Channel owner authorization with the narrowest required scope | Provider adapter inactive |
+| YouTube | YouTube Data API OAuth | Channel owner authorization with the narrowest required scope | Channel `@magaramin` observed; provider adapter inactive |
 | Telegram | Bot API | Bot token and channel admin rights | No logged-in Telegram tab observed |
 | WhatsApp | WhatsApp Business Cloud API | Business portfolio, WABA, phone number, approved templates and explicit opt-in | WhatsApp Web is insufficient; do not connect it |
 
