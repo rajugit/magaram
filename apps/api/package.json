@@ -11,6 +11,10 @@
     "./news-discovery": {
       "types": "./src/news-discovery.ts",
       "default": "./dist/news-discovery.js"
+    },
+    "./news-topics": {
+      "types": "./src/news-topics.ts",
+      "default": "./dist/news-topics.js"
     }
   },
   "scripts": {

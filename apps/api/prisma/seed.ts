@@ -6,6 +6,7 @@ const permissions = [
   { code: '*', description: 'Full platform access; assign only to SUPER_ADMIN.' },
   { code: 'settings:read', description: 'View non-secret platform configuration.' },
   { code: 'news:sources:manage', description: 'Manage authorized news sources and ingestion.' },
+  { code: 'news:verify', description: 'Verify or reject discovered news topics.' },
   { code: 'audit:read', description: 'View governance audit records.' },
   { code: 'users:manage', description: 'Create and manage newsroom user accounts.' },
   { code: 'articles:draft', description: 'Create and edit article drafts.' },
@@ -37,7 +38,7 @@ const roles = [
     permissions: ['articles:draft', 'articles:review', 'ads:review', 'market:review'],
   },
   { code: 'REPORTER', name: 'Reporter', permissions: ['articles:draft'] },
-  { code: 'FACT_CHECKER', name: 'Fact checker', permissions: ['articles:fact-check'] },
+  { code: 'FACT_CHECKER', name: 'Fact checker', permissions: ['articles:fact-check', 'news:verify'] },
   { code: 'SOCIAL_MANAGER', name: 'Social manager', permissions: ['social:manage'] },
   {
     code: 'SALES_MANAGER',

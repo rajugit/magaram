@@ -3,6 +3,7 @@ import IORedis from 'ioredis';
 import { z } from 'zod';
 import { PrismaClient, handleMaintenanceJob } from '@magaram/api/maintenance';
 import { ingestNewsSource } from '@magaram/api/news-discovery';
+import { clusterDiscoveredNews } from '@magaram/api/news-topics';
 
 const environmentSchema = z.object({
   REDIS_URL: z.string().url(),
@@ -43,7 +44,8 @@ const discoveryQueue = new Queue('news-discovery', {
 });
 const discoveryWorker = new Worker(
   'news-discovery',
-  async () => {
+  async (job) => {
+    if (job.name === 'news-topic-cluster') return clusterDiscoveredNews(db);
     const sources = await db.newsSource.findMany({ where: { enabled: true } });
     const due = sources.filter(
       (source) =>
@@ -58,6 +60,7 @@ const discoveryWorker = new Worker(
         results.push({ sourceId: source.id, failed: true });
       }
     }
+    await clusterDiscoveredNews(db);
     return { checked: sources.length, due: due.length, results };
   },
   { connection, concurrency: 1 },
@@ -71,6 +74,11 @@ await discoveryQueue.upsertJobScheduler(
   'news-source-poll-v1',
   { every: 300_000 },
   { name: 'news-source-poll', data: {} },
+);
+await discoveryQueue.upsertJobScheduler(
+  'news-topic-cluster-v1',
+  { every: 300_000 },
+  { name: 'news-topic-cluster', data: {} },
 );
 await queue.upsertJobScheduler(
   'editorial-publication-v1',

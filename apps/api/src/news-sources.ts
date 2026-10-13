@@ -1,7 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import { Router, type RequestHandler } from 'express';
 import { z } from 'zod';
-import { sendSuccess } from './api-response.js';
+import { ApiError, sendSuccess } from './api-response.js';
 import { requirePermission } from './rbac.js';
 import { ingestNewsSource, validateFeedUrl } from './news-discovery.js';
 
@@ -50,6 +50,28 @@ export function newsSourcesRouter(db: PrismaClient, csrf: RequestHandler): Route
         include: { source: { select: { id: true, name: true, sourceType: true } } },
       }),
     });
+  });
+  router.get('/news-topics', requirePermission('settings:read'), async (req, res) => {
+    const limit = Math.min(Math.max(Number(String(req.query.limit || 20)), 1), 100);
+    sendSuccess(res, {
+      items: await db.newsTopicCluster.findMany({
+        take: Number.isFinite(limit) ? limit : 20,
+        orderBy: [{ trendScore: 'desc' }, { latestUpdateAt: 'desc' }],
+        include: { discovered: { orderBy: { publishedAt: 'desc' }, take: 10, include: { source: { select: { id: true, name: true, trustLevel: true } } } } },
+      }),
+    });
+  });
+  router.post('/news-topics/:id/verification', requirePermission('news:verify'), csrf, async (req, res) => {
+    const input = z.object({ status: z.enum(['VERIFIED', 'NEEDS_REVIEW', 'REJECTED']), note: z.string().trim().max(1000).optional() }).strict().parse(req.body);
+    const topic = await db.newsTopicCluster.findUnique({ where: { id: String(req.params.id) } });
+    if (!topic) throw new ApiError(404, 'TOPIC_NOT_FOUND', 'The topic was not found.');
+    const updated = await db.$transaction(async (tx) => {
+      const cluster = await tx.newsTopicCluster.update({ where: { id: topic.id }, data: { verificationStatus: input.status } });
+      await tx.discoveredNews.updateMany({ where: { clusterId: topic.id }, data: { status: input.status } });
+      await tx.auditLog.create({ data: { actorId: req.auth!.id, action: 'news.topic.verification', entityType: 'NewsTopicCluster', entityId: topic.id, requestId: res.locals.requestId, metadata: { status: input.status, note: input.note } } });
+      return cluster;
+    });
+    sendSuccess(res, updated, 'Topic verification updated.');
   });
   return router;
 }

@@ -295,12 +295,32 @@ model DiscoveredNews {
   geography    NewsGeography
   category     String              @db.VarChar(100)
   status       NewsDiscoveryStatus @default(DISCOVERED)
+  clusterId    String?
+  cluster      NewsTopicCluster?    @relation(fields: [clusterId], references: [id], onDelete: SetNull)
   rawPayload   Json
   discoveredAt DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
   @@index([status, publishedAt])
   @@index([geography, category, discoveredAt])
+  @@index([clusterId])
+}
+
+model NewsTopicCluster {
+  id                 String              @id @default(cuid())
+  canonicalTopic     String              @db.VarChar(500)
+  geography          NewsGeography
+  category           String              @db.VarChar(100)
+  firstDetectedAt    DateTime            @default(now())
+  latestUpdateAt     DateTime            @default(now())
+  trendScore         Float               @default(0)
+  verificationStatus NewsDiscoveryStatus @default(DISCOVERED)
+  publicationStatus  String              @default("UNPUBLISHED") @db.VarChar(32)
+  discovered         DiscoveredNews[]
+
+  @@index([geography, trendScore])
+  @@index([verificationStatus, latestUpdateAt])
+  @@index([category, latestUpdateAt])
 }
 
 model ArticleClaim {
