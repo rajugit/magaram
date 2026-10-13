@@ -2,7 +2,7 @@
 
 ## Current assessment
 
-The provider-neutral publishing contract is implemented and tested. It requires an account reference, explicit consent ID, idempotency key, bounded copy, and sponsorship disclosure; inactive providers fail closed. No live social integration, provider credential configuration, consent ledger, queue, publication status, delivery metric, or webhook handler is operational yet.
+The provider-neutral publishing contract is implemented and tested. It requires an account reference, explicit consent ID, idempotency key, bounded copy, and sponsorship disclosure; inactive providers fail closed. No live social integration, provider credential configuration, durable delivery queue, publication status, delivery metric, or webhook handler is operational yet. Browser sessions for Facebook, Instagram, X, YouTube and WhatsApp Web were observed, but browser cookies are not used as API credentials. See `docs/SOCIAL_INTEGRATION_PLAN.md` for the official-API connection sequence.
 
 ## Target design
 
