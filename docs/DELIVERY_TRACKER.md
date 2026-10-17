@@ -61,3 +61,7 @@ Owner scope is recorded in `TAMIL_NEWS_LAUNCH.md`: statewide Tamil coverage, one
 ### Release continuation — 2026-10-17
 
 The official AWS `aws-secrets-manager` skill is now installed from `aws/agent-toolkit-for-aws` and loaded. The missing-skill blocker above is resolved. The existing deployment workflow keeps credentials within runtime processes and root-only server files; no Secrets Manager values were retrieved. The already tested admin-gate change is being prepared for exact-commit release; retain the prior installed version until release verification completes.
+
+### Admin-only gate deployed and verified — 2026-10-17
+
+Application revision `b6ba84bbf4f18fd1a306ca01caf334dbb5d08e08` is installed on AWS; exact-version authenticated smoke, backup, role seed and API/web/worker health passed. Previous application revision `767982fe07dde5c7e7da37e99ebaced4b2af79f7` is retained. The AWS secrets-management skill blocker is resolved. Admin-only approval/publication/corrections and IST scheduling are deployed. This does not complete CMS/AI/social production acceptance. Live discovery has no configured sources; the checked PIB Tamil feed returned HTML and was not enabled. Existing provider configuration passed smoke, but generation quality and budget behavior remain unverified. Free tools are preferred; no new paid service or resource was enabled.
