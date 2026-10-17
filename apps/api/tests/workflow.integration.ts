@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { Queue, QueueEvents, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import * as feedHttp from '../src/news-feed-http.js';
+import { ingestNewsSource } from '../src/news-discovery.js';
 import { createApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { PasswordService } from '../src/identity.js';
@@ -110,6 +112,85 @@ async function actor(name: string) {
   return { client, csrf };
 }
 describe('persisted editorial and identity workflows', () => {
+  it('audits source changes, rejects invalid fetches, deduplicates discoveries and never creates articles', async () => {
+    const admin = await actor('editor');
+    const limited = await actor('limited');
+    const input = {
+      name: 'Discovery integration fixture',
+      url: 'https://example.com/fixture-feed',
+      sourceType: 'GOVERNMENT',
+      language: 'TA',
+      geography: 'TAMIL_NADU',
+      category: 'test',
+      enabled: false,
+      licenseNotes: 'Disposable test only',
+    };
+    await request(app).post('/api/v1/news-sources').send(input).expect(401);
+    await limited.client
+      .post('/api/v1/news-sources')
+      .set('x-csrf-token', limited.csrf)
+      .send(input)
+      .expect(403);
+    await admin.client.post('/api/v1/news-sources').send(input).expect(403);
+    const source = (
+      await admin.client
+        .post('/api/v1/news-sources')
+        .set('x-csrf-token', admin.csrf)
+        .send(input)
+        .expect(200)
+    ).body.data;
+    expect(
+      await db.auditLog.count({ where: { entityId: source.id, action: 'news.source.created' } }),
+    ).toBe(1);
+    await admin.client
+      .patch(`/api/v1/news-sources/${source.id}`)
+      .set('x-csrf-token', admin.csrf)
+      .send({ name: 'Updated fixture' })
+      .expect(200);
+    expect(
+      await db.auditLog.count({ where: { entityId: source.id, action: 'news.source.updated' } }),
+    ).toBe(1);
+    const before = await db.article.count();
+    const fetch = vi.spyOn(feedHttp, 'fetchFeed');
+    try {
+      fetch.mockResolvedValue({
+        xml: '<html><body>Object moved</body></html>',
+        finalUrl: source.url,
+        httpStatus: 200,
+      });
+      await admin.client
+        .post(`/api/v1/news-sources/${source.id}/fetch`)
+        .set('x-csrf-token', admin.csrf)
+        .expect(502);
+      const history = (
+        await admin.client.get(`/api/v1/news-sources/${source.id}/fetches`).expect(200)
+      ).body.data.items;
+      expect(history[0]).toMatchObject({ status: 'FAILED', errorCode: 'INVALID_FEED' });
+      expect(
+        (await db.newsSource.findUniqueOrThrow({ where: { id: source.id } })).lastSuccessfulFetch,
+      ).toBeNull();
+      fetch.mockResolvedValue({
+        xml: '<rss><channel><item><title>தமிழ் சோதனை செய்தி</title><link>https://example.com/story</link></item></channel></rss>',
+        finalUrl: source.url,
+        httpStatus: 200,
+      });
+      await ingestNewsSource(db, source);
+      await ingestNewsSource(db, source);
+      expect(await db.discoveredNews.count({ where: { sourceId: source.id } })).toBe(1);
+      expect(
+        (await db.discoveredNews.findFirstOrThrow({ where: { sourceId: source.id } })).status,
+      ).toBe('DISCOVERED');
+      expect(await db.article.count()).toBe(before);
+      expect(
+        await db.auditLog.count({
+          where: { entityId: source.id, action: 'news.source.fetch.succeeded' },
+        }),
+      ).toBe(2);
+    } finally {
+      fetch.mockRestore();
+    }
+  });
+
   it('blocks legacy editor approval for immediate and scheduled publication', async () => {
     const admin = await actor('editor');
     const reviewer = await db.user.findUniqueOrThrow({ where: { email: 'reviewer@example.test' } });

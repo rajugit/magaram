@@ -2,3 +2,5 @@ packages:
   - apps/*
 overrides:
   deepmerge-ts: 8.0.0
+  sharp: 0.35.5
+  source-map-js: 1.2.2

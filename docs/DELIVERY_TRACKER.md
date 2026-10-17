@@ -65,3 +65,7 @@ The official AWS `aws-secrets-manager` skill is now installed from `aws/agent-to
 ### Admin-only gate deployed and verified — 2026-10-17
 
 Application revision `b6ba84bbf4f18fd1a306ca01caf334dbb5d08e08` is installed on AWS; exact-version authenticated smoke, backup, role seed and API/web/worker health passed. Previous application revision `767982fe07dde5c7e7da37e99ebaced4b2af79f7` is retained. The AWS secrets-management skill blocker is resolved. Admin-only approval/publication/corrections and IST scheduling are deployed. This does not complete CMS/AI/social production acceptance. Live discovery has no configured sources; the checked PIB Tamil feed returned HTML and was not enabled. Existing provider configuration passed smoke, but generation quality and budget behavior remain unverified. Free tools are preferred; no new paid service or resource was enabled.
+
+### Discovery hardening candidate — 2026-10-17
+
+Source auditing, strict XML parsing, bounded public-only network fetching and protected fetch history are locally verified. The corrected PIB Tamil feed returns 20 Tamil entries locally. Validation: 57 full-suite plus 3 focused unit tests, 17 disposable integration tests, typecheck/lint/build and clean production dependency audit. Next.js/sharp/source-map-js security patches are included. No new migration; live source registration/worker acceptance remains pending until the exact candidate is deployed. No article/social publication is enabled by ingestion.
