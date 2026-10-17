@@ -30,7 +30,15 @@ const roles = [
   {
     code: 'ADMIN',
     name: 'Administrator',
-    permissions: ['settings:read', 'news:sources:manage', 'audit:read'],
+    permissions: [
+      'settings:read',
+      'news:sources:manage',
+      'news:verify',
+      'audit:read',
+      'articles:draft',
+      'articles:review',
+      'articles:fact-check',
+    ],
   },
   {
     code: 'EDITOR',
@@ -38,7 +46,11 @@ const roles = [
     permissions: ['articles:draft', 'articles:review', 'ads:review', 'market:review'],
   },
   { code: 'REPORTER', name: 'Reporter', permissions: ['articles:draft'] },
-  { code: 'FACT_CHECKER', name: 'Fact checker', permissions: ['articles:fact-check', 'news:verify'] },
+  {
+    code: 'FACT_CHECKER',
+    name: 'Fact checker',
+    permissions: ['articles:fact-check', 'news:verify'],
+  },
   { code: 'SOCIAL_MANAGER', name: 'Social manager', permissions: ['social:manage'] },
   {
     code: 'SALES_MANAGER',

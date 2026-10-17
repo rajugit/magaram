@@ -12,7 +12,7 @@ const editor: AuthenticatedUser = {
   email: 'editor@example.test',
   displayName: 'Editor',
   status: 'ACTIVE',
-  roles: ['EDITOR'],
+  roles: ['ADMIN'],
   permissions: ['articles:review'],
 };
 const ready = {
@@ -72,6 +72,22 @@ describe('editorial governance', () => {
       guardTransition({ ...ready, claims: [{ status: 'UNVERIFIED' }] }, 'APPROVED', editor),
     ).toThrow('Verify');
     expect(() => guardTransition({ ...ready, sources: [] }, 'APPROVED', editor)).toThrow('Verify');
+  });
+  it('rejects non-admin approval, scheduling and publication even with wildcard permissions', () => {
+    for (const target of ['APPROVED', 'SCHEDULED', 'PUBLISHED']) {
+      expect(() =>
+        guardTransition(
+          {
+            ...ready,
+            status: target === 'APPROVED' ? 'FACT_CHECK' : 'APPROVED',
+            approvedBy: 'admin',
+            approvedAt: new Date(),
+          },
+          target,
+          { ...editor, roles: ['EDITOR'], permissions: ['*'] },
+        ),
+      ).toThrow('Only an administrator');
+    }
   });
   it('allows independently verified approval', () =>
     expect(() => guardTransition(ready, 'APPROVED', editor)).not.toThrow());

@@ -63,6 +63,22 @@ beforeAll(async () => {
     });
     if (name === 'reporter') authorId = user.id;
   }
+  const reviewPermission = await db.permission.create({ data: { code: 'articles:review' } });
+  const limitedEditorRole = await db.role.create({
+    data: {
+      code: 'EDITOR',
+      name: 'Review only',
+      permissions: { create: { permissionId: reviewPermission.id } },
+    },
+  });
+  await db.user.create({
+    data: {
+      email: 'reviewer@example.test',
+      displayName: 'Reviewer',
+      passwordHash: hash,
+      roles: { create: { roleId: limitedEditorRole.id } },
+    },
+  });
   const draftPermission = await db.permission.create({ data: { code: 'articles:draft' } });
   const reporterRole = await db.role.create({
     data: {
@@ -94,6 +110,47 @@ async function actor(name: string) {
   return { client, csrf };
 }
 describe('persisted editorial and identity workflows', () => {
+  it('blocks legacy editor approval for immediate and scheduled publication', async () => {
+    const admin = await actor('editor');
+    const reviewer = await db.user.findUniqueOrThrow({ where: { email: 'reviewer@example.test' } });
+    const story = await db.article.create({
+      data: {
+        title: 'Legacy approval fixture',
+        tags: [],
+        slug: 'legacy-approval-fixture',
+        summary: 'Controlled test fixture',
+        body: 'This fixture never leaves the disposable database.',
+        category: 'test',
+        location: 'test',
+        authorId,
+        approvedBy: reviewer.id,
+        approvedAt: new Date(),
+        status: 'APPROVED',
+        sources: {
+          create: { label: 'Fixture source', url: 'https://example.test', verified: true },
+        },
+      },
+    });
+    const result = await admin.client
+      .post(`/api/v1/articles/${story.id}/transition`)
+      .set('x-csrf-token', admin.csrf)
+      .send({ status: 'PUBLISHED', version: story.version })
+      .expect(422);
+    expect(result.body.error.code).toBe('APPROVAL_EXPIRED');
+    await db.article.update({
+      where: { id: story.id },
+      data: {
+        status: 'SCHEDULED',
+        scheduledAt: new Date(Date.now() - 1000),
+      },
+    });
+    expect(await publishScheduledArticles(db)).toEqual({ published: 0, blocked: 1 });
+    const held = await db.article.findUniqueOrThrow({ where: { id: story.id } });
+    expect(held.status).toBe('EDITOR_REVIEW');
+    expect(held.approvedBy).toBeNull();
+    await request(app).get(`/api/v1/news/${story.slug}`).expect(404);
+  });
+
   it('executes real Redis jobs, retries failures and deduplicates recurring schedulers', async () => {
     const name = process.env.MAGARAM_TEST_SCHEMA!;
     const connection = new IORedis('redis://127.0.0.1:36379', { maxRetriesPerRequest: null });
@@ -193,7 +250,21 @@ describe('persisted editorial and identity workflows', () => {
       .set('x-csrf-token', editor.csrf)
       .send(verification)
       .expect(409);
+    const reviewer = await actor('reviewer');
+    await reviewer.client
+      .post(`/api/v1/articles/${draft.id}/transition`)
+      .set('x-csrf-token', reviewer.csrf)
+      .send({ status: 'APPROVED', version })
+      .expect(403);
     await transition(editor, 'APPROVED');
+    for (const status of ['PUBLISHED', 'SCHEDULED']) {
+      await reviewer.client
+        .post(`/api/v1/articles/${draft.id}/transition`)
+        .set('x-csrf-token', reviewer.csrf)
+        .send({ status, version, scheduledAt: new Date(Date.now() + 60000).toISOString() })
+        .expect(403);
+    }
+
     const scheduledAt = new Date(Date.now() + 60000);
     await transition(editor, 'SCHEDULED', { scheduledAt: scheduledAt.toISOString() });
     await request(app).get(`/api/v1/news/${draft.slug}`).expect(404);

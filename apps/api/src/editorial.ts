@@ -6,7 +6,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ApiError, sendSuccess } from './api-response.js';
-import { requireAuthentication, requirePermission } from './rbac.js';
+import {
+  requireAuthentication,
+  requirePermission,
+  requirePublicationAdmin,
+  publicationAdminRoles,
+} from './rbac.js';
 import type { AuthenticatedUser } from './identity.js';
 import { publicationReady } from './maintenance.js';
 import { inspectImage } from './media-validation.js';
@@ -199,6 +204,7 @@ export function guardTransition(
   };
   if (!allowed[article.status]?.includes(target))
     throw new ApiError(409, 'INVALID_TRANSITION', 'This editorial transition is not allowed.');
+  if (['APPROVED', 'PUBLISHED', 'SCHEDULED'].includes(target)) requirePublicationAdmin(actor);
   if (
     ['FACT_CHECK', 'APPROVED', 'PUBLISHED', 'SCHEDULED'].includes(target) &&
     !can(actor, 'articles:review')
@@ -585,6 +591,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
             roles: {
               some: {
                 role: {
+                  code: { in: publicationAdminRoles },
                   permissions: { some: { permission: { code: { in: ['*', 'articles:review'] } } } },
                 },
               },
@@ -596,7 +603,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
           throw new ApiError(
             422,
             'APPROVAL_EXPIRED',
-            'The approving editor no longer has review access. Return to Draft for a new review.',
+            'The approving administrator no longer has approval access. Return to Draft for a new review.',
           );
       }
       if (
@@ -741,6 +748,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     requirePermission('articles:review'),
     csrf,
     async (req, res) => {
+      requirePublicationAdmin(req.auth!);
       const data = z
         .object({
           reason: z.string().min(10).max(2000),

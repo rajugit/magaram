@@ -4,10 +4,12 @@ import { api } from '../_lib/api';
 import type { Article } from '../_lib/data';
 
 export function EditorialReview({
+  canPublish,
   article,
   demo,
   onSaved,
 }: {
+  canPublish: boolean;
   article: Article;
   demo: boolean;
   onSaved: () => Promise<void>;
@@ -153,7 +155,7 @@ export function EditorialReview({
           </button>
         </form>
       )}
-      {['PUBLISHED', 'UPDATED'].includes(article.status) && (
+      {canPublish && ['PUBLISHED', 'UPDATED'].includes(article.status) && (
         <form
           onSubmit={(e) => {
             e.preventDefault();

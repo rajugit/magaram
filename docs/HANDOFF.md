@@ -46,3 +46,21 @@ The owner requested a separate application login for `admin@magarammedia.in`. It
 ## AI newsroom Milestone 2 — 2026-10-13
 
 Commit `f7a8f2c61381b3d832c43d559d645d5ceb7118b7` is installed live. The additive topic-cluster migration applied successfully, API/web/worker restarted healthy, and `/version` matches the exact commit. Deterministic Tamil/English tokenization, headline similarity, recency/source/geography trend scoring, topic listing, and permission-gated verification are implemented. The complete API suite passed 51/51, API/worker/web builds passed, and live public plus unauthenticated authorization smoke passed. No AI provider, Google Trends provider, auto-publication or social publisher was enabled. Next work is permitted-feed operational acceptance, then claim-level verification and editor-facing topic workflow.
+
+## Tamil newsroom launch and admin-only publication — 2026-10-17
+
+The owner confirmed all Tamil Nadu, at least one reviewed story daily, Facebook and YouTube, both Shorts and longer videos with AI Tamil narration, INR 1,000 monthly AI budget separate from hosting, and admin-only approval with immediate or scheduled publication. See `TAMIL_NEWS_LAUNCH.md`. Facebook Page/profile eligibility and provider OAuth remain unverified.
+
+Public `/version` was checked directly and reports `767982fe07dde5c7e7da37e99ebaced4b2af79f7`, matching the starting local HEAD. This supersedes the older installed-version entry above; only the public version endpoint was checked today, not authenticated release acceptance.
+
+Local implementation now restricts approval, immediate publication, scheduling and published corrections to ADMIN/SUPER_ADMIN. Independent approval and source/claim checks remain required. Immediate publication and the worker reject legacy approvals from editors; invalid schedules return to review. The ADMIN seed now grants newsroom preparation/review permissions. The workspace hides publication controls from editors and converts explicitly labelled IST input to UTC independent of browser timezone.
+
+Evidence: 52 unit tests, 16 isolated MySQL/Redis integration tests, typecheck, lint and production build passed. All 11 migrations applied to the disposable test schema and it was removed. Mocked-response browser acceptance passed for admin controls, editor hiding and 09:00 IST converting to 03:30 UTC in a Los Angeles browser timezone. This is not authenticated end-to-end browser evidence. Initial fixture/type errors were corrected before the passing runs. No schema migration is needed for this change; role seed is required on release.
+
+Changes remain local and are not deployed. No feed, paid AI/TTS provider or social publisher was enabled. The required `aws-secrets-manager` skill could not be found in the available local skill/plugin directories, so the credential-backed deployment helper was not used. Root AGENTS.md requires that skill first for credential tasks. Existing credentials were not displayed or copied. The unrelated untracked `output/` directory is preserved.
+
+Next: restore the required secrets-management skill, commit/push and release the tested admin gate to the existing AWS preview with role seeding and exact-version authenticated smoke. Complete permitted-feed registration/fetch/worker operational acceptance, then implement source-bound Tamil generation and metering. Facebook Page confirmation and owner OAuth remain prerequisites for real distribution. Production cutover is still separate.
+
+### Release continuation — 2026-10-17
+
+The official AWS `aws-secrets-manager` skill is now installed from `aws/agent-toolkit-for-aws` and loaded. The missing-skill blocker above is resolved. The existing deployment workflow keeps credentials within runtime processes and root-only server files; no Secrets Manager values were retrieved. The already tested admin-gate change is being prepared for exact-commit release; retain the prior installed version until release verification completes.

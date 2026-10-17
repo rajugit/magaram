@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
+import { publicationAdminRoles } from './rbac.js';
 export { PrismaClient };
 
 export async function handleMaintenanceJob(db: PrismaClient, name: string) {
@@ -72,6 +73,7 @@ export async function publishScheduledArticles(db: PrismaClient, now = new Date(
               roles: {
                 some: {
                   role: {
+                    code: { in: publicationAdminRoles },
                     permissions: {
                       some: { permission: { code: { in: ['*', 'articles:review'] } } },
                     },

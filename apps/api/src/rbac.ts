@@ -1,6 +1,18 @@
 import type { RequestHandler } from 'express';
 
 import { ApiError } from './api-response.js';
+import type { AuthenticatedUser } from './identity.js';
+
+export const publicationAdminRoles: AuthenticatedUser['roles'] = ['ADMIN', 'SUPER_ADMIN'];
+
+export function requirePublicationAdmin(user: AuthenticatedUser): void {
+  if (!user.roles.some((role) => publicationAdminRoles.includes(role)))
+    throw new ApiError(
+      403,
+      'ADMIN_APPROVAL_REQUIRED',
+      'Only an administrator may approve, schedule or publish news.',
+    );
+}
 
 export function requireAuthentication(): RequestHandler {
   return (request, _response, next) => {

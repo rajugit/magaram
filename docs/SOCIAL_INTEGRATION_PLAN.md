@@ -1,6 +1,10 @@
 # Magaram Media social integration plan
 
-## Browser account discovery
+## Confirmed launch scope — 2026-10-17
+
+See [TAMIL_NEWS_LAUNCH.md](TAMIL_NEWS_LAUNCH.md). Launch channels are Facebook and YouTube. Owner supplied Facebook `https://www.facebook.com/magaram.in.5` (Page/profile type unverified) and YouTube `https://www.youtube.com/@MagaramMedia-u6m`. The latter supersedes the historical browser-observed handle below. Both Shorts and longer videos require Tamil AI narration and admin approval of finished assets. Other channels are deferred.
+
+## Historical browser account discovery
 
 The current Chrome profile has signed-in pages for Facebook, Instagram profile `magarammedia.in`, X, YouTube channel `@magaramin`, and WhatsApp Web. This confirms browser sessions only. No cookies, local storage, passwords, access tokens or private messages are extracted or stored. Browser automation will not be used for publishing.
 

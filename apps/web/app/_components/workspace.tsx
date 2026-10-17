@@ -48,6 +48,7 @@ export function Workspace({
   const [demo, setDemo] = useState(initialPreview);
   const [ready, setReady] = useState(initialPreview);
   const [user, setUser] = useState(initialPreview ? 'Preview editor' : '');
+  const [roles, setRoles] = useState<string[]>(initialPreview ? ['SUPER_ADMIN'] : []);
   const [permissions, setPermissions] = useState<string[]>(initialPreview ? ['*'] : []);
   const [articles, setArticles] = useState<Article[]>(initialPreview ? demoArticles : []);
   const [error, setError] = useState('');
@@ -69,11 +70,19 @@ export function Workspace({
       setReady(true);
       return;
     }
-    api<{ user: { displayName: string; permissions: string[]; mustChangePassword?: boolean } }>('/me')
+    api<{
+      user: {
+        displayName: string;
+        roles: string[];
+        permissions: string[];
+        mustChangePassword?: boolean;
+      };
+    }>('/me')
       .then(async (me) => {
         if (!active) return;
         setUser(me.user.displayName);
         setPermissions(me.user.permissions);
+        setRoles(me.user.roles);
         if (
           !me.user.permissions.some((p) =>
             ['*', 'articles:draft', 'articles:review', 'articles:fact-check'].includes(p),
@@ -411,6 +420,7 @@ export function Workspace({
               {editorView && (
                 <ArticleEditor
                   article={selected}
+                  canPublish={roles.some((role) => ['ADMIN', 'SUPER_ADMIN'].includes(role))}
                   demo={demo}
                   onSaved={async () => {
                     await refresh();
@@ -457,7 +467,12 @@ export function Workspace({
               {page === 'campaigns' && <AdvertisingWorkbench demo={demo} />}
               {page === 'businesses' && <LocalWorkbench demo={demo} />}
               {page === 'taxonomy' && <Taxonomy demo={demo} />}
-              {page === 'users' && <TeamAccounts demo={demo} canManage={permissions.includes('*') || permissions.includes('users:manage')} />}
+              {page === 'users' && (
+                <TeamAccounts
+                  demo={demo}
+                  canManage={permissions.includes('*') || permissions.includes('users:manage')}
+                />
+              )}
               {![
                 'overview',
                 'articles',
@@ -560,10 +575,12 @@ function ArticleRows({ articles }: { articles: Article[] }) {
   );
 }
 function ArticleEditor({
+  canPublish,
   article,
   demo,
   onSaved,
 }: {
+  canPublish: boolean;
   article?: Article;
   demo: boolean;
   onSaved: () => Promise<void>;
@@ -895,9 +912,10 @@ function ArticleEditor({
             {busy ? 'Saving…' : demo ? 'Validate sample draft' : 'Save draft'}
             <Icon name="check" size={18} />
           </button>
-          {article?.status === 'APPROVED' && (
+          {!canPublish && <p>Only an administrator can approve, schedule or publish news.</p>}
+          {canPublish && article?.status === 'APPROVED' && (
             <label>
-              Schedule in your local time
+              Schedule in India time (IST)
               <input
                 type="datetime-local"
                 value={scheduledAt}
@@ -906,42 +924,51 @@ function ArticleEditor({
             </label>
           )}
           {article &&
-            (transitions[article.status] || []).map((target) => (
-              <button
-                key={target}
-                type="button"
-                className="button secondary full"
-                disabled={demo || busy || (target === 'SCHEDULED' && !scheduledAt)}
-                onClick={async () => {
-                  setBusy(true);
-                  setError('');
-                  try {
-                    await api(`/articles/${article.id}/transition`, {
-                      method: 'POST',
-                      body: JSON.stringify({
-                        status: target,
-                        version: article.version,
-                        ...(target === 'SCHEDULED'
-                          ? { scheduledAt: new Date(scheduledAt).toISOString() }
-                          : {}),
-                      }),
-                    });
-                    await onSaved();
-                  } catch (e) {
-                    setError((e as Error).message);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                Move to {labels[target]}
-              </button>
-            ))}
+            (transitions[article.status] || [])
+              .filter(
+                (target) => canPublish || !['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(target),
+              )
+              .map((target) => (
+                <button
+                  key={target}
+                  type="button"
+                  className="button secondary full"
+                  disabled={demo || busy || (target === 'SCHEDULED' && !scheduledAt)}
+                  onClick={async () => {
+                    setBusy(true);
+                    setError('');
+                    try {
+                      await api(`/articles/${article.id}/transition`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                          status: target,
+                          version: article.version,
+                          ...(target === 'SCHEDULED'
+                            ? { scheduledAt: new Date(`${scheduledAt}:00+05:30`).toISOString() }
+                            : {}),
+                        }),
+                      });
+                      await onSaved();
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  {target === 'PUBLISHED'
+                    ? 'Publish now'
+                    : target === 'SCHEDULED'
+                      ? 'Schedule publication'
+                      : `Move to ${labels[target]}`}
+                </button>
+              ))}
         </aside>
       </form>
       {article && (
         <EditorialReview
           key={`${article.id}-${article.version}`}
+          canPublish={canPublish}
           article={article}
           demo={demo}
           onSaved={onSaved}
