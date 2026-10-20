@@ -1,8 +1,14 @@
 # Current handoff
 
-Updated 2026-09-25. The user requested completing all phases, project skills/documentation, and local plus live testing. Continue authorized implementation and verification without asking again for routine decisions. System-enforced permissions still apply.
+Updated 2026-10-20. The user requested completing all phases, project skills/documentation, and local plus live testing. Continue authorized implementation and verification without asking again for routine decisions. System-enforced permissions still apply.
 
 ## Current milestone
+
+Discovery hardening is deployed at `7e3a600956b277c22708774e7b4707eba766971c`. Public `/version` was rechecked on 2026-10-20 and still matches. On 2026-10-17, authenticated release smoke and real worker ingestion passed: the permitted PIB Chennai Tamil feed produced 20 persisted unverified discoveries and 20 topics, with a 30-minute polling interval. Admin-only publication remains enforced. No article or social post was published.
+
+Next: provide the newsroom topic/evidence review workflow, then source-bound Tamil draft generation with measured costs and quality. Facebook Page eligibility, social OAuth, actual distribution and Tamil narration remain pending. Existing Bedrock configuration is present, but real generation quality/budget acceptance is not complete. Do not redeploy solely because a documentation commit is newer than the application release. Full production sign-off remains separate.
+
+## Historical release notes
 
 Phase 8 campaign review and quotes are deployed and verified on the existing live server. The user explicitly requested committing and deploying to the existing live server on 2026-09-25. This is not full product production-readiness sign-off. Do not abandon release verification when a follow-up says “proceed”.
 
@@ -16,7 +22,7 @@ Phase 8 campaign review and quotes are deployed and verified on the existing liv
 - Local smoke: 29 checks pass, including authenticated sign-in/logout. The new live testing account has verified EDITOR and SALES_MANAGER access; its password exists only in the private ignored credentials file. Never copy it into this document or Git.
 - The missing Nginx `/version` route was fixed in both TLS server blocks with backup, configuration validation and reload. Final authenticated live smoke passed and matched the exact deployed commit. See `TEST_REPORT_2026-09-25.md`.
 
-## Next actions
+## Historical next actions (superseded by current milestone)
 
 1. Phase 8 release verification is complete. Installed commit: `a79b5ebe66af309d059c355ada8841f29922af11`. Backup, additive migration, permission seed, API/web/worker startup and authenticated `deploy/smoke.mjs` passed. Public `/version` matched exactly. Browser inspection verified `/preview/8`, sample labels, disabled demo forms and the payment/delivery notice. Previous application release: `ab04f6ea714396a0ef007aa33ee8ad02f6874e3e`. Do not redeploy merely because a turn resumed.
 2. Phase 9 core is deployed live at exact commit `df608e44f61de42ce9c7bde5b40bb16fff330d33`. The labelled preview `/preview/9` was browser-verified after release. It provides shared moderated listings for jobs, classifieds, property, education and deals, with ownership, independent review, expiry, reports and public privacy controls. API namespace is `/api/v1/market`.
@@ -82,3 +88,13 @@ The PIB Chennai Tamil feed works with the explicit region parameter: `https://ww
 Local changes: validated XML parsing rejects HTML, malformed XML, DTDs/entities and unsafe story links; a valid empty feed is distinguished from an invalid response. Streaming payload limits, public DNS validation/pinning, IPv4/IPv6 address checks, bounded redirects and per-request deadlines replace the old unbounded fetch. Source create/update and fetch start/outcome auditing are transactional. Fetch-history API is permission-gated; error codes are sanitized. Manual fetch and worker ingestion share the same protections. Tests verify permission/CSRF rejection, persisted failed fetches, deduplication, audit records and no article creation.
 
 Dependency audit found existing Next.js/sharp/source-map-js advisories. Updated Next.js to 16.3.8 and pinned sharp 0.35.5/source-map-js 1.2.2; production audit now reports no known vulnerabilities. Free MIT XML/IP validation libraries were added. Typecheck, lint and production build passed on the patched dependency set; 57 full-suite unit tests plus 3 additional focused transport tests and 17 isolated integration tests passed. All 11 migrations applied and the disposable schema was removed. No new migration is needed. The explicit opt-in `deploy/accept-news-source.mjs` will register the permitted feed through authenticated APIs, run a real BullMQ poll and check persisted unverified Tamil discoveries; it disables a newly enabled source if acceptance fails. Live release/ingestion evidence is pending below.
+
+## First permitted Tamil feed operational — 2026-10-17
+
+Application revision `7e3a600956b277c22708774e7b4707eba766971c` was pushed and deployed from its exact archive. Backup, server production build, current migration check (11 migrations), permission seeding and API/web/worker startup succeeded. Authenticated smoke passed exact-version, readiness, public routes, protected API rejection, secure cookies, login/logout and configured provider-state checks. Previous application release `b6ba84bbf4f18fd1a306ca01caf334dbb5d08e08` remains available.
+
+The explicit feed acceptance script registered and enabled `https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=11&Regid=6&reg=6` through authenticated APIs and processed a real BullMQ poll. Result: 20 fetched entries, 20 persisted Tamil discoveries and 20 topics, all unverified, polling every 1,800 seconds. Registry geography is INDIA; editors must establish Tamil Nadu relevance. Source attribution and third-party exclusions are recorded in license notes. This is government press-release evidence, not independent reporting.
+
+After restarting the worker, acceptance passed again with the same persisted counts. The repeat verifies restart/job processing and persistence, not a forced second network fetch inside the polling interval. Repeated-ingestion deduplication is covered by isolated integration tests. No article or social post was published; no paid resource, subscription, new provider enrollment or AI/TTS generation was invoked.
+
+These final records were recovered on 2026-10-20 after the earlier documentation command was not executed because automatic approval review reached its usage limit. The public application version was freshly verified; authenticated/feed evidence above is from 2026-10-17, not a fresh October 20 ingestion check. Remaining work: editor-facing topic/evidence queue, claim-level review, source-bound Tamil drafts and budget/quality acceptance, narration, Facebook Page confirmation and owner OAuth for Facebook/YouTube.

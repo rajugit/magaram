@@ -69,3 +69,10 @@ Application revision `b6ba84bbf4f18fd1a306ca01caf334dbb5d08e08` is installed on 
 ### Discovery hardening candidate — 2026-10-17
 
 Source auditing, strict XML parsing, bounded public-only network fetching and protected fetch history are locally verified. The corrected PIB Tamil feed returns 20 Tamil entries locally. Validation: 57 full-suite plus 3 focused unit tests, 17 disposable integration tests, typecheck/lint/build and clean production dependency audit. Next.js/sharp/source-map-js security patches are included. No new migration; live source registration/worker acceptance remains pending until the exact candidate is deployed. No article/social publication is enabled by ingestion.
+
+
+### First permitted Tamil feed operational — 2026-10-17
+
+Deployed application revision: `7e3a600956b277c22708774e7b4707eba766971c`. Exact archive release, backup, production build, existing migrations, role seed, service health and authenticated exact-version smoke passed. PIB Chennai Tamil ingestion through the real worker persisted 20 unverified discoveries and 20 topics; the source polls every 30 minutes. Worker restart acceptance passed using persisted results; repeated-ingestion deduplication is separately covered by isolated integration tests. Geography remains INDIA until editorial review establishes local relevance. No article/social publication or AI/TTS invocation occurred.
+
+Recorded on 2026-10-20 after a documentation-only approval-service interruption; public `/version` freshly confirmed the same installed revision. Remaining: newsroom topic/evidence UI, claim review, source-bound Tamil generation and cost/quality acceptance, narration, Facebook Page eligibility and provider OAuth/delivery. No additional phase or production gate is marked complete.
