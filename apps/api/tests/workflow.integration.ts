@@ -288,6 +288,8 @@ describe('persisted editorial and identity workflows', () => {
         })
         .expect(200)
     ).body.data;
+    expect(draft.seoTitle).toBe('Integration reporting fixture');
+    expect(draft.seoDescription).toBe('A controlled integration test story.');
     let version = draft.version;
     async function transition(who: typeof author, status: string, extra = {}) {
       const result = await who.client

@@ -103,3 +103,9 @@ export async function getPublicBusinesses(query: URLSearchParams) {
     limit: number;
   }>(`/local/businesses?${query.toString()}`);
 }
+
+export function storyImageUrl(article: PublicArticle) {
+  return article.image
+    ? `/api/v1/media/${article.image.id}/file`
+    : `/news/${article.slug}/story-image`;
+}

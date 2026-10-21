@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PublicArticlePage } from '../../_components/public-site';
-import { getPublicArticle, siteUrl } from '../../_lib/public-data';
+import { getPublicArticle, siteUrl, storyImageUrl } from '../../_lib/public-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,9 +20,22 @@ export async function generateMetadata({
   return {
     title,
     description,
+    keywords: article.tags,
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${siteUrl}${storyImageUrl(article)}`],
+    },
     alternates: { canonical: `/news/${article.slug}` },
     openGraph: {
       type: 'article',
+      images: [
+        {
+          url: `${siteUrl}${storyImageUrl(article)}`,
+          alt: article.image?.alt || 'செய்தி அட்டை · நிகழ்வுப் புகைப்படம் அல்ல',
+        },
+      ],
       title,
       description,
       url,

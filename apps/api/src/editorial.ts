@@ -14,6 +14,7 @@ import {
 } from './rbac.js';
 import type { AuthenticatedUser } from './identity.js';
 import { publicationReady } from './maintenance.js';
+import { completeArticleMetadata } from './article-metadata.js';
 import { inspectImage } from './media-validation.js';
 
 export const states = [
@@ -413,8 +414,13 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     sendSuccess(res, item);
   });
   router.post('/articles', requirePermission('articles:draft'), csrf, async (req, res) => {
-    const { sources, claims, ...input } = articleSchema.parse(req.body);
+    const parsed = articleSchema.parse(req.body);
     const item = await db.$transaction(async (tx) => {
+      const tags = await tx.taxonomy.findMany({ where: { kind: 'tag' }, select: { name: true } });
+      const { sources, claims, ...input } = completeArticleMetadata(
+        parsed,
+        tags.map((tag) => tag.name),
+      );
       await validateArticleReferences(tx, { ...input, sources, claims }, req.auth!);
       const item = await tx.article.create({
         data: {
@@ -450,7 +456,7 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
     const { version, ...input } = articleSchema
       .extend({ version: z.number().int().min(1) })
       .parse(req.body);
-    const { sources, claims, ...data } = input;
+    const { sources, claims, ...rawData } = input;
     const item = await db.$transaction(async (tx) => {
       const current = await tx.article.findUnique({ where: { id: String(req.params.id) } });
       if (!current) throw new ApiError(404, 'NOT_FOUND', 'Article not found.');
@@ -458,6 +464,11 @@ export function editorialRouter(db: PrismaClient, csrf: RequestHandler): Router 
         throw new ApiError(403, 'FORBIDDEN', 'You cannot edit this article.');
       if (!['DRAFT', 'AI_DRAFT'].includes(current.status))
         throw new ApiError(409, 'REVIEW_LOCKED', 'Return the article to draft before editing.');
+      const tags = await tx.taxonomy.findMany({ where: { kind: 'tag' }, select: { name: true } });
+      const data = completeArticleMetadata(
+        rawData,
+        tags.map((tag) => tag.name),
+      );
       await validateArticleReferences(tx, { ...data, sources, claims }, req.auth!);
       const result = await tx.article.updateMany({
         where: { id: current.id, version },

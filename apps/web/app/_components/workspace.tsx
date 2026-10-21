@@ -731,6 +731,11 @@ function ArticleEditor({
         <aside className="editor-aside">
           <section className="panel editor-fields">
             <h3>Story details</h3>
+            <p className="fineprint">
+              Blank SEO fields are filled from your headline and summary on save. Empty tags use
+              matching registered tags. Without a selected photo, published stories show a labelled
+              news card.
+            </p>
             <label>
               SEO title
               <input name="seoTitle" maxLength={250} defaultValue={article?.seoTitle || ''} />
@@ -746,7 +751,7 @@ function ArticleEditor({
             <label>
               Story image
               <select name="imageId" defaultValue={article?.image?.id || ''}>
-                <option value="">No image</option>
+                <option value="">Automatic branded news card (not an event photo)</option>
                 {article?.image && !media.some((item) => item.id === article.image!.id) && (
                   <option value={article.image.id}>{article.image.alt}</option>
                 )}

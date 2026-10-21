@@ -1,6 +1,6 @@
 # Current handoff
 
-Updated 2026-10-20. The user requested completing all phases, project skills/documentation, and local plus live testing. Continue authorized implementation and verification without asking again for routine decisions. System-enforced permissions still apply.
+Updated 2026-10-21. The user requested completing all phases, project skills/documentation, and local plus live testing. Continue authorized implementation and verification without asking again for routine decisions. System-enforced permissions still apply.
 
 ## Current milestone
 
@@ -104,3 +104,15 @@ These final records were recovered on 2026-10-20 after the earlier documentation
 The owner explicitly requested “commit and deploy production”. Commit `c1f3802aaa9be12a268c96e1af3defc8151ba0cd` was already pushed; its exact archive was deployed to the existing AWS host serving https://magarammedia.in. Backup completed, API/web/worker production builds passed, all 11 migrations were current, roles were seeded and all application services restarted. The first extraction attempt lacked root directory permissions and made no release changes; extraction with sudo succeeded. The release reported healthy and authenticated smoke passed readiness, public routes, permission rejection, secure session login/logout, protected APIs and provider state. A separate public version request matched exactly. Previous image/release `7e3a600956b277c22708774e7b4707eba766971c` is retained.
 
 Only documentation changed since the previously tested application; no redundant local application suite was run. Untracked `output/` remains untouched. No provider was enabled or article/social content published. Deployment to the live domain does not establish acceptance of unfinished narration/social integrations or outstanding restore/load/editorial checks. Subsequent evidence-only documentation commits do not require another rollout.
+
+### Live smoke verification — 2026-10-21
+
+Requested live smoke passed on installed revision `c1f3802aaa9be12a268c96e1af3defc8151ba0cd`. Public homepage returned HTTP 200 and independent `/version` matched. All 33 requests in `deploy/smoke.mjs` passed expected statuses, including readiness, public news/archive/feed/sitemap routes, unauthenticated API rejection, CSRF, secure/HttpOnly session cookies, authenticated protected APIs, configured provider-state assertions and logout. SSH was refreshed to the current operator’s single IPv4 /32 with HTTP/HTTPS rules preserved. No deployment, content publication or real AI/email/social delivery was performed; provider status checks do not establish delivery acceptance.
+
+### Story metadata and image correction — 2026-10-21 (local, not deployed)
+
+The manually created live farmers-story draft omitted SEO fields, tags and a photo. Code inspection also found public stories ignoring their selected image in favour of placeholder artwork. Local changes now fill blank SEO title/description from existing title/summary on create/update, preserving Tamil graphemes and editorial overrides. Empty tags match complete words against registered taxonomy only; no matching registered tags means no tags are invented. Existing saved records are not backfilled automatically, and locked review records still require return to draft before edits.
+
+Public story, lead and list cards now render selected media or a free locally generated 1200x630 Tamil PNG news card, labelled as not an event photograph. A licensed bundled Noto Tamil font avoids external runtime font calls. The image route uses only the published article API and returns 404 for inaccessible/draft stories. Open Graph, Twitter and NewsArticle metadata include the image; keywords use story tags. Newsroom copy explains automatic defaults. No photorealistic image provider or paid service was added.
+
+Validation: typecheck, lint, full production build, 63 unit tests and 17 guarded disposable integration tests passed; integration asserts persisted SEO defaults. Initial sandbox listener failures were resolved by rerunning with local listener permission. Generated PNG visually inspected with a synthetic Tamil story; public metadata assertions and private-story image 404 passed. Final web lint/build passed after updating homepage/list cards. Synthetic desktop (1280px) and mobile (390px) browser acceptance confirmed the image loads without horizontal overflow. Live installed revision remains `c1f3802aaa9be12a268c96e1af3defc8151ba0cd`; these changes require commit/release before appearing live. The farmers draft remains in EDITOR_REVIEW with unverified evidence and is not published. Preserve unrelated `output/` and earlier smoke-test documentation.

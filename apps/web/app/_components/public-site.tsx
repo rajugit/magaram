@@ -1,3 +1,4 @@
+import { storyImageUrl } from '../_lib/public-data';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -66,7 +67,18 @@ function StoryCard({
 }) {
   return (
     <article className="story-card">
-      <StoryMark index={index} />
+      {pathPrefix ? (
+        <StoryMark index={index} />
+      ) : (
+        <Image
+          src={storyImageUrl(article)}
+          alt={article.image?.alt || 'செய்தி அட்டை · நிகழ்வுப் புகைப்படம் அல்ல'}
+          width={1200}
+          height={630}
+          unoptimized
+          style={{ width: '100%', height: 'auto' }}
+        />
+      )}
       <div className="story-card-body">
         <div className="story-meta">
           <span>{categoryLabel(article.category)}</span>
@@ -163,7 +175,18 @@ export function PublicHome({
         {lead ? (
           <>
             <section className="lead-story" aria-labelledby="lead-story-title">
-              <StoryMark index={0} />
+              {pathPrefix ? (
+                <StoryMark index={0} />
+              ) : (
+                <Image
+                  src={storyImageUrl(lead)}
+                  alt={lead.image?.alt || 'செய்தி அட்டை · நிகழ்வுப் புகைப்படம் அல்ல'}
+                  width={1200}
+                  height={630}
+                  unoptimized
+                  style={{ width: '100%', height: 'auto' }}
+                />
+              )}
               <div className="lead-story-body">
                 <div className="story-meta">
                   <span>{categoryLabel(lead.category)}</span>
@@ -344,6 +367,8 @@ export function PublicArticlePage({
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
+    image: `${siteUrl}${storyImageUrl(article)}`,
+    keywords: article.tags.join(', '),
     headline: article.seoTitle || article.title,
     description: article.seoDescription || article.summary,
     datePublished: article.publishedAt || article.updatedAt,
@@ -384,7 +409,23 @@ export function PublicArticlePage({
               </time>
             </div>
           </header>
-          <StoryMark index={2} />
+          {pathPrefix ? (
+            <StoryMark index={2} />
+          ) : (
+            <figure>
+              <Image
+                src={storyImageUrl(article)}
+                alt={article.image?.alt || 'செய்தி அட்டை · நிகழ்வுப் புகைப்படம் அல்ல'}
+                width={1200}
+                height={630}
+                unoptimized
+                style={{ width: '100%', height: 'auto' }}
+              />
+              <figcaption>
+                {article.image?.credit || 'மகரம் மீடியா செய்தி அட்டை · நிகழ்வுப் புகைப்படம் அல்ல'}
+              </figcaption>
+            </figure>
+          )}
           <div className="article-content">
             {article.body
               .replace(/\r/g, '')
